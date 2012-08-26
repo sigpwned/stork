@@ -1,4 +1,4 @@
-package com.sigpwned.elegy.io;
+package com.sigpwned.stork.io;
 
 import java.io.IOException;
 import java.io.Reader;

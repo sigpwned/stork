@@ -1,4 +1,4 @@
-package com.sigpwned.elegy.parse;
+package com.sigpwned.stork.parse;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.sigpwned.elegy.io.ParseReader;
+import com.sigpwned.stork.io.ParseReader;
 
 public class Tokenizer {
 	private static final Map<String,Token.Type> keywordTypes;
