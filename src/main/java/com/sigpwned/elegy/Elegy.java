@@ -1,4 +1,4 @@
-package com.sigpwned.com.sigpwned.elegy;
+package com.sigpwned.elegy;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -7,8 +7,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
-import com.sigpwned.com.sigpwned.elegy.parse.Token;
-import com.sigpwned.com.sigpwned.elegy.parse.Tokenizer;
+import com.sigpwned.elegy.parse.Token;
+import com.sigpwned.elegy.parse.Tokenizer;
 
 public class Elegy {
 	public static Reader IN;
