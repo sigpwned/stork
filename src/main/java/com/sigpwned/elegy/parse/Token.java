@@ -17,6 +17,7 @@ public class Token {
 		WHILE(MetaType.KEYWORD, "while"),
 		TRUE(MetaType.KEYWORD, "true"),
 		FALSE(MetaType.KEYWORD, "false"),
+		NULL(MetaType.KEYWORD, "null"),
 		
 		// Operator Tokens
 		PLUS(MetaType.OPERATOR, "+"),
