@@ -24,6 +24,9 @@ public class Token {
 		MINUS(MetaType.OPERATOR, "-"),
 		STAR(MetaType.OPERATOR, "*"),
 		SLASH(MetaType.OPERATOR, "/"),
+		PERCENT(MetaType.OPERATOR, "%"),
+		LPAREN(MetaType.OPERATOR, "("),
+		RPAREN(MetaType.OPERATOR, ")"),
 		
 		// Special Tokens
 		EOF(MetaType.OPERATOR, "$");
@@ -46,15 +49,21 @@ public class Token {
 	}
 	
 	private Type type;
+	private int offset;
 	private String text;
 	
-	public Token(Type type, String text) {
+	public Token(Type type, int offset, String text) {
 		this.type = type;
+		this.offset = offset;
 		this.text = text;
 	}
 
 	public Type getType() {
 		return type;
+	}
+	
+	public int getOffset() {
+		return offset;
 	}
 
 	public String getText() {

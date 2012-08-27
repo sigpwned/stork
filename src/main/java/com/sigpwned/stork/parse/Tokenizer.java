@@ -44,98 +44,115 @@ public class Tokenizer {
 	}
 	
 	private ParseReader input;
+	private Token next;
 	
 	public Tokenizer(Reader input) {
 		this.input = new ParseReader(input);
+		this.next  = null;
 	}
 	
 	protected ParseReader getInput() {
 		return input;
 	}
 	
-	public Token nextToken() throws IOException, ParseException {
-		Token result;
-		
-		w();
-		
-		if(getInput().peek() == -1)
-			result = new Token(Token.Type.EOF, Token.Type.EOF.getText());
-		else
-		if(Character.isLetter(getInput().peek())) {
-			StringBuilder buf=new StringBuilder();
-			while(Character.isLetter(getInput().peek()))
-				buf.append((char) getInput().read());
+	public Token peekToken() throws IOException, ParseException {
+		if(next == null) {
+			w();
 			
-			String text=buf.toString();
-			if(keywordTypes.containsKey(text)) {
-				Token.Type type=keywordTypes.get(text);
-				result = new Token(type, type.getText());
-			}
-			else
-				result = new Token(Token.Type.SYMBOL, text);
-		} else
-		if(Character.isDigit(getInput().peek())) {
 			int offset=getInput().getOffset();
-			StringBuilder buf=new StringBuilder();
-			while(Character.isDigit(getInput().peek()))
-				buf.append((char) getInput().read());
-			if(getInput().peek() == '.') {
-				buf.append((char) getInput().expect('.'));
-				if(Character.isDefined(getInput().peek())) {
-					while(Character.isDigit(getInput().peek()))
-						buf.append((char) getInput().read());
-					result = new Token(Token.Type.FLOAT, buf.toString());
+			
+			if(getInput().peek() == -1)
+				next = new Token(Token.Type.EOF, offset, Token.Type.EOF.getText());
+			else
+			if(Character.isLetter(getInput().peek())) {
+				StringBuilder buf=new StringBuilder();
+				while(Character.isLetter(getInput().peek()))
+					buf.append((char) getInput().read());
+				
+				String text=buf.toString();
+				if(keywordTypes.containsKey(text)) {
+					Token.Type type=keywordTypes.get(text);
+					next = new Token(type, offset, type.getText());
 				}
 				else
-					throw new ParseException("Floating-point numbers must have at least one digit after the decimal point", offset);
-			}
-			else
-				result = new Token(Token.Type.INT, buf.toString());
-		} else
-		if(getInput().peek() == '\"') {
-			StringBuilder buf=new StringBuilder();
-			getInput().expect('\"');
-			while(getInput().peek()!=-1 && getInput().peek()!='\n' && getInput().peek()!='\"') {
-				char ch=(char) getInput().read();
-				if(ch == '\\') {
-					if(getInput().peek() != -1) {
-						if(stringEscapes.containsKey((char) getInput().peek()))
-							buf.append(stringEscapes.get((char) getInput().read()));
-						else
-							throw new ParseException("Unrecognized escape sequence: "+(char) getInput().peek(), getInput().getOffset());
+					next = new Token(Token.Type.SYMBOL, offset, text);
+			} else
+			if(Character.isDigit(getInput().peek())) {
+				StringBuilder buf=new StringBuilder();
+				while(Character.isDigit(getInput().peek()))
+					buf.append((char) getInput().read());
+				if(getInput().peek() == '.') {
+					buf.append((char) getInput().expect('.'));
+					if(Character.isDefined(getInput().peek())) {
+						while(Character.isDigit(getInput().peek()))
+							buf.append((char) getInput().read());
+						next = new Token(Token.Type.FLOAT, offset, buf.toString());
 					}
 					else
-						throw new ParseException("Unexpected EOF", getInput().getOffset());
+						throw new ParseException("Floating-point numbers must have at least one digit after the decimal point", offset);
 				}
 				else
-					buf.append(ch);
-			}
-			getInput().expect('\"');
-			result = new Token(Token.Type.STRING, buf.toString());
-		} else
-		if(operatorCharacters.contains(Character.valueOf((char) getInput().peek()))) {
-			int offset=getInput().getOffset();
-			StringBuilder buf=new StringBuilder();
-			buf.append((char) getInput().peek());
-			while(operatorTypes.containsKey(buf.toString())) {
-				getInput().read();
-				if(getInput().peek() != -1)
-					buf.append((char) getInput().peek());
-				else {
-					buf.append(' ');
-					break;
+					next = new Token(Token.Type.INT, offset, buf.toString());
+			} else
+			if(getInput().peek() == '\"') {
+				StringBuilder buf=new StringBuilder();
+				getInput().expect('\"');
+				while(getInput().peek()!=-1 && getInput().peek()!='\n' && getInput().peek()!='\"') {
+					char ch=(char) getInput().read();
+					if(ch == '\\') {
+						if(getInput().peek() != -1) {
+							if(stringEscapes.containsKey((char) getInput().peek()))
+								buf.append(stringEscapes.get((char) getInput().read()));
+							else
+								throw new ParseException("Unrecognized escape sequence: "+(char) getInput().peek(), getInput().getOffset());
+						}
+						else
+							throw new ParseException("Unexpected EOF", getInput().getOffset());
+					}
+					else
+						buf.append(ch);
 				}
+				getInput().expect('\"');
+				next = new Token(Token.Type.STRING, offset, buf.toString());
+			} else
+			if(operatorCharacters.contains(Character.valueOf((char) getInput().peek()))) {
+				StringBuilder buf=new StringBuilder();
+				buf.append((char) getInput().peek());
+				while(operatorTypes.containsKey(buf.toString())) {
+					getInput().read();
+					if(getInput().peek() != -1)
+						buf.append((char) getInput().peek());
+					else {
+						buf.append(' ');
+						break;
+					}
+				}
+				buf.setLength(buf.length()-1);
+				if(!operatorTypes.containsKey(buf.toString()))
+					throw new ParseException("Unrecognized operator: "+buf.toString(), offset);
+				Token.Type type=operatorTypes.get(buf.toString());
+				next = new Token(type, offset, type.getText());
 			}
-			buf.setLength(buf.length()-1);
-			if(!operatorTypes.containsKey(buf.toString()))
-				throw new ParseException("Unrecognized operator: "+buf.toString(), offset);
-			Token.Type type=operatorTypes.get(buf.toString());
-			result = new Token(type, type.getText());
+			else
+				throw new ParseException("Unrecognized character: "+(char) getInput().peek(), getInput().getOffset());
 		}
-		else
-			throw new ParseException("Unrecognized character: "+(char) getInput().peek(), getInput().getOffset());
-		
+		return next;
+	}
+	
+	public Token.Type peekType() throws IOException, ParseException {
+		return peekToken().getType();
+	}
+	
+	public Token nextToken() throws IOException, ParseException {
+		Token result=peekToken();
+		next = null;
 		return result;
+	}
+	
+	public void consumeType(Token.Type type) throws IOException, ParseException {
+		Token token=nextToken();
+		if(token.getType() != type)
+			throw new ParseException("Expected token `"+type+"', found `"+token.getType()+"'", token.getOffset());
 	}
 	
 	protected void w() throws IOException {
