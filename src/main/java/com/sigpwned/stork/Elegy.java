@@ -17,9 +17,9 @@ import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
-import com.sigpwned.stork.parse.Parser;
-import com.sigpwned.stork.parse.Token;
-import com.sigpwned.stork.parse.Tokenizer;
+import com.sigpwned.stork.engine.compilation.parse.Parser;
+import com.sigpwned.stork.engine.compilation.parse.Token;
+import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
 
 public class Elegy {
 	public static Reader IN;

@@ -1,4 +1,4 @@
-package com.sigpwned.stork.parse;
+package com.sigpwned.stork.engine.compilation.parse;
 
 import java.io.IOException;
 import java.io.Reader;

@@ -1,4 +1,4 @@
-package com.sigpwned.stork.parse;
+package com.sigpwned.stork.engine.compilation.parse;
 
 public class Token {
 	public static enum MetaType {
