@@ -6,17 +6,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
 
-import com.sigpwned.stork.engine.compilation.ast.AST;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
-import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
-import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
-import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
-import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
@@ -87,67 +78,5 @@ public class Elegy {
 			result = null;
 		
 		return result;
-	}
-	
-	public static void print(ExprAST expr, List<ExprAST> emitting, Map<ExprAST,Integer> counts) throws IOException {
-		String node;
-		if(expr instanceof BinaryOperatorExprAST)
-			node = expr.asBinaryOperator().getOperator().getText();
-		else
-		if(expr instanceof UnaryOperatorExprAST)
-			node = expr.asUnaryOperator().getOperator().getText();
-		else
-		if(expr instanceof IntExprAST)
-			node = Long.toString(expr.asInt().getValue());
-		else
-		if(expr instanceof FloatExprAST)
-			node = Double.toString(expr.asFloat().getValue());
-		else
-			node = "???????";
-		
-		String line="    ";
-		for(int i=0;i<emitting.size();i++) {
-			ExprAST ancestor=emitting.get(i);
-			if(get(counts, ancestor, 0) < ancestor.getChildren().size()) {
-				if(i == emitting.size()-1)
-					line = line+"|-- ";
-				else
-					line = line+"|   ";
-			}
-			else
-				line = line+"    ";
-		}
-		line = line+node;
-		line = line+"\n";
-		OUT.write(line);
-		
-		if(emitting.size() != 0)
-			inc(counts, emitting.get(emitting.size()-1));
-		
-		emitting.add(expr);
-		for(AST child : expr.getChildren())
-			print((ExprAST) child, emitting, counts);
-		emitting.remove(expr);
-	}
-	
-	public static <K,V> V get(Map<K,V> map, K k, V def) {
-		V result=map.get(k);
-		if(result == null)
-			result = def;
-		return result;
-	}
-	
-	public static <K> void inc(Map<K,Integer> map, K k) {
-		Integer count=map.get(k);
-		if(count == null)
-			count = 0;
-		map.put(k, count+1);
-	}
-	
-	public static String times(String text, int times) {
-		StringBuilder result=new StringBuilder();
-		for(int i=0;i<times;i++)
-			result.append(text);
-		return result.toString();
 	}
 }
