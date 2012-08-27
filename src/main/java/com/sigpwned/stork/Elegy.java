@@ -103,12 +103,12 @@ public class Elegy {
 			Expr ancestor=emitting.get(i);
 			if(get(counts, ancestor, 0) < ancestor.getChildren().size()) {
 				if(i == emitting.size()-1)
-					line = line+"|-";
+					line = line+"|-- ";
 				else
-					line = line+"| ";
+					line = line+"|   ";
 			}
 			else
-				line = line+"  ";
+				line = line+"    ";
 		}
 		line = line+node;
 		line = line+"\n";
