@@ -6,11 +6,11 @@ import com.sigpwned.stork.ast.expr.IntExpr;
 import com.sigpwned.stork.ast.expr.UnaryOperatorExpr;
 
 public abstract class Expr extends AST {
-	public BinaryOperatorExpr asBinop() {
+	public BinaryOperatorExpr asBinaryOperator() {
 		return (BinaryOperatorExpr) this;
 	}
 
-	public UnaryOperatorExpr asUnop() {
+	public UnaryOperatorExpr asUnaryOperator() {
 		return (UnaryOperatorExpr) this;
 	}
 

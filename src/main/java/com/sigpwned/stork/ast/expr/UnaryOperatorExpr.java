@@ -4,7 +4,7 @@ import com.sigpwned.stork.ast.Expr;
 
 public class UnaryOperatorExpr extends Expr {
 	public static enum Operator {
-		NEGATIVE("-");
+		NEGATIVE("-"), POSITIVE("+");
 		
 		private String text;
 		

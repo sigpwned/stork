@@ -7,6 +7,7 @@ import com.sigpwned.stork.ast.Expr;
 import com.sigpwned.stork.ast.expr.BinaryOperatorExpr;
 import com.sigpwned.stork.ast.expr.FloatExpr;
 import com.sigpwned.stork.ast.expr.IntExpr;
+import com.sigpwned.stork.ast.expr.UnaryOperatorExpr;
 
 public class Parser {
 	private Tokenizer tokens;
@@ -71,6 +72,23 @@ public class Parser {
 	}
 
 	public Expr expr3() throws IOException, ParseException {
+		Expr result;
+		
+		if(getTokens().peekType() == Token.Type.MINUS) {
+			getTokens().consumeType(Token.Type.MINUS);
+			result = new UnaryOperatorExpr(UnaryOperatorExpr.Operator.NEGATIVE, expr3());
+		} else
+		if(getTokens().peekType() == Token.Type.PLUS) {
+			getTokens().consumeType(Token.Type.PLUS);
+			result = new UnaryOperatorExpr(UnaryOperatorExpr.Operator.POSITIVE, expr3());
+		}
+		else
+			result = expr4();
+		
+		return result;
+	}
+	
+	public Expr expr4() throws IOException, ParseException {
 		return value();
 	}
 	

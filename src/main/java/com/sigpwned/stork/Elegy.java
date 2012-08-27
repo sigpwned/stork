@@ -85,10 +85,10 @@ public class Elegy {
 	public static void print(Expr expr, List<Expr> emitting, Map<Expr,Integer> counts) throws IOException {
 		String node;
 		if(expr instanceof BinaryOperatorExpr)
-			node = expr.asBinop().getOperator().getText();
+			node = expr.asBinaryOperator().getOperator().getText();
 		else
 		if(expr instanceof UnaryOperatorExpr)
-			node = expr.asUnop().getOperator().getText();
+			node = expr.asUnaryOperator().getOperator().getText();
 		else
 		if(expr instanceof IntExpr)
 			node = Long.toString(expr.asInt().getValue());
