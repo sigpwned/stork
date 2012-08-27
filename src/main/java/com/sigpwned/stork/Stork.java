@@ -13,7 +13,7 @@ import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
 import com.sigpwned.stork.x.StorkException;
 
-public class Elegy {
+public class Stork {
 	public static Reader IN;
 	public static Writer OUT;
 	
