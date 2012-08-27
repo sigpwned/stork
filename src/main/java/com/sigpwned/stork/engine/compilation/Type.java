@@ -9,4 +9,8 @@ public abstract class Type {
 	public static final IntType INT=NumericType.INT;
 	
 	public abstract String getText();
+	
+	public String toString() {
+		return getText();
+	}
 }

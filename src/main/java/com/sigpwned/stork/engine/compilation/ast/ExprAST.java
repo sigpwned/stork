@@ -5,6 +5,7 @@ import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
+import com.sigpwned.stork.engine.runtime.Expr;
 
 public abstract class ExprAST extends AST {
 	public BinaryOperatorExprAST asBinaryOperator() {
@@ -23,5 +24,9 @@ public abstract class ExprAST extends AST {
 		return (FloatExprAST) this;
 	}
 	
+	public abstract void analyze();
+	
 	public abstract Type getType();
+	
+	public abstract Expr compile();
 }

@@ -20,6 +20,7 @@ import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
+import com.sigpwned.stork.x.StorkException;
 
 public class Elegy {
 	public static Reader IN;
@@ -39,11 +40,17 @@ public class Elegy {
 				for(String line=line();line!=null;line=line()) {
 					Parser parser=new Parser(new Tokenizer(new StringReader(line)));
 					try {
-						ExprAST expr=parser.expr();
-						if(parser.getTokens().peekType() != Token.Type.EOF)
-							System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
-						print(expr, new ArrayList<ExprAST>(), new IdentityHashMap<ExprAST,Integer>());
-						OUT.flush();
+						try {
+							ExprAST expr=parser.expr();
+							if(parser.getTokens().peekType() != Token.Type.EOF)
+								System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
+							expr.analyze();
+							OUT.write(expr.compile().eval().toString()+"\n");
+							OUT.flush();
+						}
+						catch(StorkException e) {
+							OUT.write("ERROR: "+e.getMessage()+"\n");
+						}
 					}
 					finally {
 						parser.close();

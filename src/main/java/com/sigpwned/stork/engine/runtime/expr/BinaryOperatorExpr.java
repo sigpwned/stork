@@ -78,7 +78,29 @@ public class BinaryOperatorExpr extends Expr {
 		public abstract Object eval(Object left, Object right);
 	}
 	
+	private Operator operator;
+	private Expr left;
+	private Expr right;
+	
+	public BinaryOperatorExpr(Operator operator, Expr left, Expr right) {
+		this.operator = operator;
+		this.left = left;
+		this.right = right;
+	}
+
+	public Operator getOperator() {
+		return operator;
+	}
+
+	public Expr getLeft() {
+		return left;
+	}
+
+	public Expr getRight() {
+		return right;
+	}
+
 	public Object eval() {
-		return null;
+		return getOperator().eval(getLeft().eval(), getRight().eval());
 	}
 }
