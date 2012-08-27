@@ -1,5 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast.expr;
 
+import com.sigpwned.stork.engine.compilation.Type;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 
 public class UnaryOperatorExprAST extends ExprAST {
@@ -14,6 +15,10 @@ public class UnaryOperatorExprAST extends ExprAST {
 		
 		public String getText() {
 			return text;
+		}
+		
+		public Type getType(Type inner) {
+			return inner;
 		}
 	}
 	
@@ -30,5 +35,9 @@ public class UnaryOperatorExprAST extends ExprAST {
 	
 	public ExprAST getChild() {
 		return (ExprAST) getChildren().get(0);
+	}
+
+	public Type getType() {
+		return getOperator().getType(getChild().getType());
 	}
 }

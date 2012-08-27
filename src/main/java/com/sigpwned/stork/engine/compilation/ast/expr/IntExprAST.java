@@ -1,5 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast.expr;
 
+import com.sigpwned.stork.engine.compilation.Type;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 
 public class IntExprAST extends ExprAST {
@@ -11,5 +12,9 @@ public class IntExprAST extends ExprAST {
 
 	public long getValue() {
 		return value;
+	}
+
+	public Type getType() {
+		return Type.INT;
 	}
 }
