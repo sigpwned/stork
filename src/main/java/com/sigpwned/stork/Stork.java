@@ -10,7 +10,7 @@ import java.io.Writer;
 import com.sigpwned.stork.parse.Token;
 import com.sigpwned.stork.parse.Tokenizer;
 
-public class Elegy {
+public class Stork {
 	public static Reader IN;
 	public static Writer OUT;
 	
