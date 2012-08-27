@@ -11,12 +11,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.sigpwned.stork.ast.AST;
-import com.sigpwned.stork.ast.Expr;
-import com.sigpwned.stork.ast.expr.BinaryOperatorExpr;
-import com.sigpwned.stork.ast.expr.FloatExpr;
-import com.sigpwned.stork.ast.expr.IntExpr;
-import com.sigpwned.stork.ast.expr.UnaryOperatorExpr;
+import com.sigpwned.stork.engine.compilation.ast.AST;
+import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.parse.Parser;
 import com.sigpwned.stork.parse.Token;
 import com.sigpwned.stork.parse.Tokenizer;
@@ -39,10 +39,10 @@ public class Elegy {
 				for(String line=line();line!=null;line=line()) {
 					Parser parser=new Parser(new Tokenizer(new StringReader(line)));
 					try {
-						Expr expr=parser.expr();
+						ExprAST expr=parser.expr();
 						if(parser.getTokens().peekType() != Token.Type.EOF)
 							System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
-						print(expr, new ArrayList<Expr>(), new IdentityHashMap<Expr,Integer>());
+						print(expr, new ArrayList<ExprAST>(), new IdentityHashMap<ExprAST,Integer>());
 						OUT.flush();
 					}
 					finally {
@@ -82,25 +82,25 @@ public class Elegy {
 		return result;
 	}
 	
-	public static void print(Expr expr, List<Expr> emitting, Map<Expr,Integer> counts) throws IOException {
+	public static void print(ExprAST expr, List<ExprAST> emitting, Map<ExprAST,Integer> counts) throws IOException {
 		String node;
-		if(expr instanceof BinaryOperatorExpr)
+		if(expr instanceof BinaryOperatorExprAST)
 			node = expr.asBinaryOperator().getOperator().getText();
 		else
-		if(expr instanceof UnaryOperatorExpr)
+		if(expr instanceof UnaryOperatorExprAST)
 			node = expr.asUnaryOperator().getOperator().getText();
 		else
-		if(expr instanceof IntExpr)
+		if(expr instanceof IntExprAST)
 			node = Long.toString(expr.asInt().getValue());
 		else
-		if(expr instanceof FloatExpr)
+		if(expr instanceof FloatExprAST)
 			node = Double.toString(expr.asFloat().getValue());
 		else
 			node = "???????";
 		
 		String line="    ";
 		for(int i=0;i<emitting.size();i++) {
-			Expr ancestor=emitting.get(i);
+			ExprAST ancestor=emitting.get(i);
 			if(get(counts, ancestor, 0) < ancestor.getChildren().size()) {
 				if(i == emitting.size()-1)
 					line = line+"|-- ";
@@ -119,7 +119,7 @@ public class Elegy {
 		
 		emitting.add(expr);
 		for(AST child : expr.getChildren())
-			print((Expr) child, emitting, counts);
+			print((ExprAST) child, emitting, counts);
 		emitting.remove(expr);
 	}
 	

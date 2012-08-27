@@ -1,8 +1,8 @@
-package com.sigpwned.stork.ast.expr;
+package com.sigpwned.stork.engine.compilation.ast.expr;
 
-import com.sigpwned.stork.ast.Expr;
+import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 
-public class BinaryOperatorExpr extends Expr {
+public class BinaryOperatorExprAST extends ExprAST {
 	public static enum Operator {
 		PLUS("+"), MINUS("-"), TIMES("*"), DIVIDE("/"), MOD("%");
 		
@@ -19,7 +19,7 @@ public class BinaryOperatorExpr extends Expr {
 	
 	private Operator operator;
 	
-	public BinaryOperatorExpr(Operator operator, Expr left, Expr right) {
+	public BinaryOperatorExprAST(Operator operator, ExprAST left, ExprAST right) {
 		this.operator = operator;
 		addChild(left);
 		addChild(right);
@@ -29,12 +29,12 @@ public class BinaryOperatorExpr extends Expr {
 		return operator;
 	}
 	
-	public Expr getLeft() {
-		return (Expr) getChildren().get(0);
+	public ExprAST getLeft() {
+		return (ExprAST) getChildren().get(0);
 	}
 
 	
-	public Expr getRight() {
-		return (Expr) getChildren().get(0);
+	public ExprAST getRight() {
+		return (ExprAST) getChildren().get(0);
 	}
 }

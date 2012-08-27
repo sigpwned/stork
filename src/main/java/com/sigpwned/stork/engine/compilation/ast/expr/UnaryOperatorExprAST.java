@@ -1,8 +1,8 @@
-package com.sigpwned.stork.ast.expr;
+package com.sigpwned.stork.engine.compilation.ast.expr;
 
-import com.sigpwned.stork.ast.Expr;
+import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 
-public class UnaryOperatorExpr extends Expr {
+public class UnaryOperatorExprAST extends ExprAST {
 	public static enum Operator {
 		NEGATIVE("-"), POSITIVE("+");
 		
@@ -19,7 +19,7 @@ public class UnaryOperatorExpr extends Expr {
 	
 	private Operator operator;
 	
-	public UnaryOperatorExpr(Operator operator, Expr child) {
+	public UnaryOperatorExprAST(Operator operator, ExprAST child) {
 		this.operator = operator;
 		addChild(child);
 	}
@@ -28,7 +28,7 @@ public class UnaryOperatorExpr extends Expr {
 		return operator;
 	}
 	
-	public Expr getChild() {
-		return (Expr) getChildren().get(0);
+	public ExprAST getChild() {
+		return (ExprAST) getChildren().get(0);
 	}
 }
