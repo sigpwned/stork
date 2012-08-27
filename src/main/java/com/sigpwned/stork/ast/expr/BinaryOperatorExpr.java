@@ -35,6 +35,6 @@ public class BinaryOperatorExpr extends Expr {
 
 	
 	public Expr getRight() {
-		return (Expr) getChildren().get(0);
+		return (Expr) getChildren().get(1);
 	}
 }
