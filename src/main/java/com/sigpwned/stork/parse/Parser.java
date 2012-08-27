@@ -24,7 +24,7 @@ public class Parser {
 		return expr1();
 	}
 	
-	public Expr expr1() throws IOException, ParseException {
+	protected Expr expr1() throws IOException, ParseException {
 		Expr result=expr2();
 		
 		boolean replaced;
@@ -45,7 +45,7 @@ public class Parser {
 		return result;
 	}
 
-	public Expr expr2() throws IOException, ParseException {
+	protected Expr expr2() throws IOException, ParseException {
 		Expr result=expr3();
 		
 		boolean replaced;
@@ -71,7 +71,7 @@ public class Parser {
 		return result;
 	}
 
-	public Expr expr3() throws IOException, ParseException {
+	protected Expr expr3() throws IOException, ParseException {
 		Expr result;
 		
 		if(getTokens().peekType() == Token.Type.MINUS) {
@@ -92,7 +92,7 @@ public class Parser {
 		return value();
 	}
 	
-	public Expr value() throws IOException, ParseException {
+	protected Expr value() throws IOException, ParseException {
 		Expr result;
 		
 		if(getTokens().peekType() == Token.Type.INT)
