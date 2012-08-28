@@ -11,6 +11,7 @@ import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
+import com.sigpwned.stork.x.InternalStorkException;
 import com.sigpwned.stork.x.StorkException;
 
 public class Stork {
@@ -38,6 +39,9 @@ public class Stork {
 							expr.analyze();
 							OUT.write(expr.compile().eval().toString()+"\n");
 							OUT.flush();
+						}
+						catch(InternalStorkException e) {
+							OUT.write("INTERNAL ERROR: "+e.getMessage()+"\n");
 						}
 						catch(StorkException e) {
 							OUT.write("ERROR: "+e.getMessage()+"\n");

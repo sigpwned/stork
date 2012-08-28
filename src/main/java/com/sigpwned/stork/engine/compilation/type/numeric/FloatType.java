@@ -11,4 +11,8 @@ public class FloatType extends NumericType {
 	public String getText() {
 		return "Float";
 	}
+
+	public int getPrecision() {
+		return 2000;
+	}
 }

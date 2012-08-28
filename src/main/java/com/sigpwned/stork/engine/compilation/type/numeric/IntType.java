@@ -8,4 +8,8 @@ public class IntType extends NumericType {
 	public String getText() {
 		return "Int";
 	}
+
+	public int getPrecision() {
+		return 1000;
+	}
 }

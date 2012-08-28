@@ -5,9 +5,12 @@ import java.util.Map;
 
 import com.sigpwned.stork.engine.compilation.Type;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.compilation.type.NumericType;
+import com.sigpwned.stork.engine.compilation.x.InternalCompilationStorkException;
 import com.sigpwned.stork.engine.compilation.x.NoSuchOperatorException;
 import com.sigpwned.stork.engine.runtime.Expr;
 import com.sigpwned.stork.engine.runtime.expr.BinaryOperatorExpr;
+import com.sigpwned.stork.engine.runtime.expr.IntToFloatExpr;
 import com.sigpwned.stork.x.StorkException;
 
 public class BinaryOperatorExprAST extends ExprAST {
@@ -35,18 +38,20 @@ public class BinaryOperatorExprAST extends ExprAST {
 		}
 		
 		public Type getType(Type left, Type right) {
-			if(!left.equals(right))
-				throw new NoSuchOperatorException(getText(), left, right);
-			
 			Type result;
-			if(left.equals(Type.INT))
-				result = Type.INT;
+			if(left.equals(right))
+				result = left;
 			else
-			if(left.equals(Type.FLOAT))
-				result = Type.FLOAT;
+			if(left instanceof NumericType && right instanceof NumericType) {
+				NumericType nleft=(NumericType) left;
+				NumericType nright=(NumericType) right;
+				if(nleft.getPrecision() > nright.getPrecision())
+					result = nleft;
+				else
+					result = right;
+			}
 			else
 				throw new StorkException("Unrecognized type: "+left);
-			
 			return result;
 		}
 		
@@ -59,8 +64,39 @@ public class BinaryOperatorExprAST extends ExprAST {
 		}
 		
 		public Expr compile(ExprAST left, ExprAST right) {
-			BinaryOperatorExpr.Operator runtimeOperator=getRuntimeOperator(left.getType(), right.getType());
-			return new BinaryOperatorExpr(runtimeOperator, left.compile(), right.compile());
+			Type ltype=left.getType();
+			Type rtype=right.getType();
+			Type resultType=getType(ltype, rtype);
+			BinaryOperatorExpr.Operator runtimeOperator=getRuntimeOperator(ltype, rtype);
+			return new BinaryOperatorExpr(
+				runtimeOperator,
+				coerce(left.compile(), ltype, resultType),
+				coerce(right.compile(), rtype, resultType));
+		}
+		
+		protected static Expr coerce(Expr expr, Type type, Type target) {
+			Expr result;
+
+			if(type.equals(target))
+				result = expr;
+			else
+			if(type instanceof NumericType && target instanceof NumericType) {
+				NumericType ntype=(NumericType) type;
+				NumericType ntarget=(NumericType) target;
+				if(ntype.getPrecision() < ntarget.getPrecision()) {
+					if(ntype.equals(Type.INT) && ntarget.equals(Type.FLOAT)) {
+						result = new IntToFloatExpr(expr);
+					}
+					else
+						throw new InternalCompilationStorkException("Asked to coerce unrecognized numeric type(s) `"+type.getText()+"' to `"+target.getText()+"'"); 
+				}
+				else
+					throw new InternalCompilationStorkException("Asked to coerce type `"+type.getText()+"' to less precise type `"+target.getText()+"'");
+			}
+			else
+				throw new InternalCompilationStorkException("Asked to perform impossible coercion of type `"+type.getText()+"' to type `"+target.getText()+"'");
+			
+			return result;
 		}
 	}
 	
