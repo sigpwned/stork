@@ -7,12 +7,8 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
-import com.sigpwned.stork.engine.compilation.ast.ExprAST;
-import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
-import com.sigpwned.stork.x.InternalStorkException;
-import com.sigpwned.stork.x.StorkException;
 
 public class Stork {
 	public static Reader IN;
@@ -30,25 +26,14 @@ public class Stork {
 			}
 			try {
 				for(String line=line();line!=null;line=line()) {
-					Parser parser=new Parser(new Tokenizer(new StringReader(line)));
+					Tokenizer tokens=new Tokenizer(new StringReader(line));
 					try {
-						try {
-							ExprAST expr=parser.expr();
-							if(parser.getTokens().peekType() != Token.Type.EOF)
-								System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
-							expr.analyze();
-							OUT.write(expr.compile().eval().toString()+"\n");
-							OUT.flush();
-						}
-						catch(InternalStorkException e) {
-							OUT.write("INTERNAL ERROR: "+e.getMessage()+"\n");
-						}
-						catch(StorkException e) {
-							OUT.write("ERROR: "+e.getMessage()+"\n");
-						}
+						for(Token token=tokens.nextToken();token.getType()!=Token.Type.EOF;token=tokens.nextToken())
+							OUT.write(String.format("    %-6s  %s\n", token.getType().name(), token.getText()));
+						OUT.flush();
 					}
 					finally {
-						parser.close();
+						tokens.close();
 					}
 				}
 			}
