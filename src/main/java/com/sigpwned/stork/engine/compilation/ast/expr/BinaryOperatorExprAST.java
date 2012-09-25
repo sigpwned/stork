@@ -1,6 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast.expr;
 
-import com.sigpwned.stork.engine.compilation.ASTCompiler;
+import com.sigpwned.stork.engine.compilation.StorkCompiler;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.runtime.Expr;
 
@@ -40,7 +40,7 @@ public class BinaryOperatorExprAST extends ExprAST {
 		return (ExprAST) getChildren().get(1);
 	}
 
-	public Expr compile(ASTCompiler compiler) {
+	public Expr compile(StorkCompiler compiler) {
 		return compiler.compile(this);
 	}
 }

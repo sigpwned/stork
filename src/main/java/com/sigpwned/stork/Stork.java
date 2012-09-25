@@ -7,8 +7,9 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
-import com.sigpwned.stork.engine.compilation.ASTCompiler;
+import com.sigpwned.stork.engine.compilation.StorkCompiler;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.compilation.compiler.DefaultStorkCompiler;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
@@ -30,7 +31,7 @@ public class Stork {
 				OUT = new OutputStreamWriter(System.out);
 			}
 			try {
-				ASTCompiler compiler=new ASTCompiler();
+				StorkCompiler compiler=new DefaultStorkCompiler();
 				for(String line=line();line!=null;line=line()) {
 					Tokenizer tokens=new Tokenizer(new StringReader(line));
 					try {
