@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
+import com.sigpwned.stork.engine.compilation.ASTCompiler;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
@@ -29,6 +30,7 @@ public class Stork {
 				OUT = new OutputStreamWriter(System.out);
 			}
 			try {
+				ASTCompiler compiler=new ASTCompiler();
 				for(String line=line();line!=null;line=line()) {
 					Parser parser=new Parser(new Tokenizer(new StringReader(line)));
 					try {
@@ -36,8 +38,7 @@ public class Stork {
 							ExprAST expr=parser.expr();
 							if(parser.getTokens().peekType() != Token.Type.EOF)
 								System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
-							expr.analyze();
-							OUT.write(expr.compile().eval().toString()+"\n");
+							OUT.write(compiler.compile(expr).eval().toString()+"\n");
 							OUT.flush();
 						}
 						catch(InternalStorkException e) {
