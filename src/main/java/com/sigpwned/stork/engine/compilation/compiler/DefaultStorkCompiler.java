@@ -67,9 +67,6 @@ public class DefaultStorkCompiler implements StorkCompiler {
 		put(BinaryOperatorExprAST.Operator.MOD, binmodulusRuntimeOperators);
 	}};
 	
-	/* (non-Javadoc)
-	 * @see com.sigpwned.stork.engine.compilation.StorkCompiler#compile(com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST)
-	 */
 	public Expr compile(BinaryOperatorExprAST expr) {
 		Expr result;
 		
@@ -119,9 +116,6 @@ public class DefaultStorkCompiler implements StorkCompiler {
 		put(UnaryOperatorExprAST.Operator.NEGATIVE, unminusRuntimeOperators);
 	}};
 	
-	/* (non-Javadoc)
-	 * @see com.sigpwned.stork.engine.compilation.StorkCompiler#compile(com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST)
-	 */
 	public Expr compile(UnaryOperatorExprAST expr) {
 		Expr result;
 		
@@ -154,16 +148,10 @@ public class DefaultStorkCompiler implements StorkCompiler {
 	///////////////////////////////////////////////////////////////////////////
 	// OTHER //////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	/* (non-Javadoc)
-	 * @see com.sigpwned.stork.engine.compilation.StorkCompiler#compile(com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST)
-	 */
 	public Expr compile(IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
-	/* (non-Javadoc)
-	 * @see com.sigpwned.stork.engine.compilation.StorkCompiler#compile(com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST)
-	 */
 	public Expr compile(FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
