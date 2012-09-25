@@ -12,6 +12,8 @@ import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
+import com.sigpwned.stork.x.InternalStorkException;
+import com.sigpwned.stork.x.StorkException;
 
 public class Stork {
 	public static Reader IN;
@@ -32,6 +34,7 @@ public class Stork {
 				for(String line=line();line!=null;line=line()) {
 					Tokenizer tokens=new Tokenizer(new StringReader(line));
 					try {
+						Parser parser=new Parser(tokens);
 						try {
 							ExprAST expr=parser.expr();
 							if(parser.getTokens().peekType() != Token.Type.EOF)
