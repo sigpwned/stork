@@ -7,6 +7,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
+<<<<<<< HEAD
+=======
+import com.sigpwned.stork.engine.compilation.ASTCompiler;
+import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.compilation.parse.Parser;
+>>>>>>> tags/lesson3
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
 
@@ -25,12 +31,23 @@ public class Stork {
 				OUT = new OutputStreamWriter(System.out);
 			}
 			try {
+				ASTCompiler compiler=new ASTCompiler();
 				for(String line=line();line!=null;line=line()) {
 					Tokenizer tokens=new Tokenizer(new StringReader(line));
 					try {
-						for(Token token=tokens.nextToken();token.getType()!=Token.Type.EOF;token=tokens.nextToken())
-							OUT.write(String.format("    %-6s  %s\n", token.getType().name(), token.getText()));
-						OUT.flush();
+						try {
+							ExprAST expr=parser.expr();
+							if(parser.getTokens().peekType() != Token.Type.EOF)
+								System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
+							OUT.write(compiler.compile(expr).eval().toString()+"\n");
+							OUT.flush();
+						}
+						catch(InternalStorkException e) {
+							OUT.write("INTERNAL ERROR: "+e.getMessage()+"\n");
+						}
+						catch(StorkException e) {
+							OUT.write("ERROR: "+e.getMessage()+"\n");
+						}
 					}
 					finally {
 						tokens.close();
