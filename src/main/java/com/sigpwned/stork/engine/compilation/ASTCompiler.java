@@ -27,7 +27,6 @@ public class ASTCompiler {
 	///////////////////////////////////////////////////////////////////////////
 	// BINARY OPERATORS ///////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	
 	@SuppressWarnings("serial")
 	private static final Map<Type,BinaryOperatorExpr.Operator> binplusRuntimeOperators=new HashMap<Type,BinaryOperatorExpr.Operator>() {{
 		put(Type.FLOAT, BinaryOperatorExpr.Operator.FADD);
@@ -66,10 +65,37 @@ public class ASTCompiler {
 		put(BinaryOperatorExprAST.Operator.MOD, binmodulusRuntimeOperators);
 	}};
 	
+	public Expr compile(BinaryOperatorExprAST expr) {
+		Expr result;
+		
+		Type ltype=computeType(expr.getLeft());
+		Type rtype=computeType(expr.getRight());
+		Type resultType=computeBinaryOperatorResultType(ltype, rtype);
+		
+		Map<Type,BinaryOperatorExpr.Operator> runtimeOperators=binaryOperators.get(expr.getOperator());
+		if(runtimeOperators == null)
+			throw new InternalCompilationStorkException("Unrecognized BinaryOperatorExpr.Operator: "+expr.getOperator());
+		
+		if(runtimeOperators.containsKey(resultType)) {
+			BinaryOperatorExpr.Operator operator=runtimeOperators.get(resultType);
+			if(operator != null) {
+				result = new BinaryOperatorExpr(
+					operator,
+					coerce(expr.getLeft().compile(this), ltype, resultType),
+					coerce(expr.getRight().compile(this), rtype, resultType));
+			}
+			else
+				throw new InternalCompilationStorkException("Implicit binary operator not allowed: "+expr.getOperator());
+		}
+		else
+			throw new NoSuchOperatorException(expr.getOperator().getText(), ltype, rtype);
+
+		return result;
+	}
+	
 	///////////////////////////////////////////////////////////////////////////
 	// UNARY OPERATORS ////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	
 	@SuppressWarnings("serial")
 	private static final Map<Type,UnaryOperatorExpr.Operator> unplusRuntimeOperators=new HashMap<Type,UnaryOperatorExpr.Operator>() {{
 		put(Type.FLOAT, null);
@@ -88,59 +114,7 @@ public class ASTCompiler {
 		put(UnaryOperatorExprAST.Operator.NEGATIVE, unminusRuntimeOperators);
 	}};
 	
-	///////////////////////////////////////////////////////////////////////////
-	// COMPILATION ////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
-	
-	public Expr compile(ExprAST ast) {
-		Expr result;
-		
-		if(ast instanceof BinaryOperatorExprAST)
-			result = compile(ast.asBinaryOperator());
-		else
-		if(ast instanceof UnaryOperatorExprAST)
-			result = compile(ast.asUnaryOperator());
-		else
-		if(ast instanceof IntExprAST)
-			result = compile(ast.asInt());
-		else
-		if(ast instanceof FloatExprAST)
-			result = compile(ast.asFloat());
-		else
-			throw new InternalCompilationStorkException("Unrecognized ExprAST: "+ast);
-		
-		return result;
-	}
-	
-	protected Expr compile(BinaryOperatorExprAST expr) {
-		Expr result;
-		
-		Type ltype=computeType(expr.getLeft());
-		Type rtype=computeType(expr.getRight());
-		Type resultType=computeBinaryOperatorResultType(ltype, rtype);
-		
-		Map<Type,BinaryOperatorExpr.Operator> runtimeOperators=binaryOperators.get(expr.getOperator());
-		if(runtimeOperators == null)
-			throw new InternalCompilationStorkException("Unrecognized BinaryOperatorExpr.Operator: "+expr.getOperator());
-		
-		if(runtimeOperators.containsKey(resultType)) {
-			BinaryOperatorExpr.Operator operator=runtimeOperators.get(resultType);
-			if(operator != null) {
-				result = new BinaryOperatorExpr(
-					operator,
-					coerce(compile(expr.getLeft()), ltype, resultType),
-					coerce(compile(expr.getRight()), rtype, resultType));
-			}
-			else
-				throw new InternalCompilationStorkException("Implicit binary operator not allowed: "+expr.getOperator());
-		}
-		else
-			throw new NoSuchOperatorException(expr.getOperator().getText(), ltype, rtype);
-
-		return result;
-	}
-	
-	protected Expr compile(UnaryOperatorExprAST expr) {
+	public Expr compile(UnaryOperatorExprAST expr) {
 		Expr result;
 		
 		Type type=computeType(expr.getChild());
@@ -154,13 +128,13 @@ public class ASTCompiler {
 			if(operator != null) {
 				result = new UnaryOperatorExpr(
 					operator,
-					compile(expr.getChild()));
+					expr.getChild().compile(this));
 			}
 			else {
 				// If there is an "empty slot" for our runtime operator, that means that
 				// this is a valid operation, but has no side-effect. (For example, 
 				// unary plus has no effect.) Just return the given expression.
-				result = compile(expr.getChild());
+				result = expr.getChild().compile(this);
 			}
 		}
 		else
@@ -169,18 +143,20 @@ public class ASTCompiler {
 		return result;
 	}
 	
-	protected Expr compile(IntExprAST expr) {
+	///////////////////////////////////////////////////////////////////////////
+	// OTHER //////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	public Expr compile(IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
-	protected Expr compile(FloatExprAST expr) {
+	public Expr compile(FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
 	// TYPE ///////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	
 	protected Type computeType(ExprAST expr) {
 		Type result;
 		
@@ -206,7 +182,6 @@ public class ASTCompiler {
 	///////////////////////////////////////////////////////////////////////////
 	// UTILITY ////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	
 	protected Type computeBinaryOperatorResultType(Type left, Type right) {
 		Type result;
 		if(left.equals(right))

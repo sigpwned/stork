@@ -1,6 +1,8 @@
 	package com.sigpwned.stork.engine.compilation.ast.expr;
 
+import com.sigpwned.stork.engine.compilation.ASTCompiler;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.runtime.Expr;
 
 public class FloatExprAST extends ExprAST {
 	private double value;
@@ -11,5 +13,9 @@ public class FloatExprAST extends ExprAST {
 
 	public double getValue() {
 		return value;
+	}
+
+	public Expr compile(ASTCompiler compiler) {
+		return compiler.compile(this);
 	}
 }
