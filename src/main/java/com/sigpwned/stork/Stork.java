@@ -7,12 +7,9 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 
-<<<<<<< HEAD
-=======
 import com.sigpwned.stork.engine.compilation.ASTCompiler;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.parse.Parser;
->>>>>>> tags/lesson3
 import com.sigpwned.stork.engine.compilation.parse.Token;
 import com.sigpwned.stork.engine.compilation.parse.Tokenizer;
 
