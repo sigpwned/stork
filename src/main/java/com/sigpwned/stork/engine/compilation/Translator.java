@@ -82,8 +82,8 @@ public class Translator {
 			if(operator != null) {
 				result = new BinaryOperatorExpr(
 					operator,
-					coerce(expr.getLeft().compile(this), ltype, resultType),
-					coerce(expr.getRight().compile(this), rtype, resultType));
+					coerce(expr.getLeft().translate(this), ltype, resultType),
+					coerce(expr.getRight().translate(this), rtype, resultType));
 			}
 			else
 				throw new InternalCompilationStorkException("Implicit binary operator not allowed: "+expr.getOperator());
@@ -115,7 +115,7 @@ public class Translator {
 		put(UnaryOperatorExprAST.Operator.NEGATIVE, unminusRuntimeOperators);
 	}};
 	
-	public Expr compile(UnaryOperatorExprAST expr) {
+	public Expr translate(UnaryOperatorExprAST expr) {
 		Expr result;
 		
 		Type type=computeType(expr.getChild());
@@ -129,13 +129,13 @@ public class Translator {
 			if(operator != null) {
 				result = new UnaryOperatorExpr(
 					operator,
-					expr.getChild().compile(this));
+					expr.getChild().translate(this));
 			}
 			else {
 				// If there is an "empty slot" for our runtime operator, that means that
 				// this is a valid operation, but has no side-effect. (For example, 
 				// unary plus has no effect.) Just return the given expression.
-				result = expr.getChild().compile(this);
+				result = expr.getChild().translate(this);
 			}
 		}
 		else

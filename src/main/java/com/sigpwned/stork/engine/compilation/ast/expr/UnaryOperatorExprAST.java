@@ -34,7 +34,7 @@ public class UnaryOperatorExprAST extends ExprAST {
 		return (ExprAST) getChildren().get(0);
 	}
 
-	public Expr compile(Translator compiler) {
-		return compiler.compile(this);
+	public Expr translate(Translator translator) {
+		return translator.translate(this);
 	}
 }

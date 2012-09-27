@@ -40,7 +40,7 @@ public class BinaryOperatorExprAST extends ExprAST {
 		return (ExprAST) getChildren().get(1);
 	}
 
-	public Expr compile(Translator compiler) {
-		return compiler.compile(this);
+	public Expr translate(Translator translator) {
+		return translator.compile(this);
 	}
 }

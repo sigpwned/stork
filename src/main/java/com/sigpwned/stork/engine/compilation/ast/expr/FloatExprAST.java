@@ -15,7 +15,7 @@ public class FloatExprAST extends ExprAST {
 		return value;
 	}
 
-	public Expr compile(Translator compiler) {
-		return compiler.compile(this);
+	public Expr translate(Translator translator) {
+		return translator.compile(this);
 	}
 }

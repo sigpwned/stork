@@ -40,7 +40,7 @@ public class Stork {
 							ExprAST expr=parser.expr();
 							if(parser.getTokens().peekType() != Token.Type.EOF)
 								System.err.println("WARNING: Ignoring tokens: "+parser.getTokens().peekToken().getText());
-							OUT.write(expr.compile(compiler).eval().toString()+"\n");
+							OUT.write(expr.translate(compiler).eval().toString()+"\n");
 							OUT.flush();
 						}
 						catch(InternalStorkException e) {

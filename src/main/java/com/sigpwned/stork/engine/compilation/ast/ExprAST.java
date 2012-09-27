@@ -24,5 +24,5 @@ public abstract class ExprAST extends AST {
 		return (FloatExprAST) this;
 	}
 	
-	public abstract Expr compile(Translator compiler);
+	public abstract Expr translate(Translator translate);
 }
