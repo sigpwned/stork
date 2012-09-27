@@ -1,11 +1,10 @@
-package com.sigpwned.stork.engine.compilation.compiler;
+package com.sigpwned.stork.engine.compilation;
 
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.sigpwned.stork.engine.compilation.StorkCompiler;
-import com.sigpwned.stork.engine.compilation.Type;
+import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
@@ -22,8 +21,8 @@ import com.sigpwned.stork.engine.runtime.expr.IntToFloatExpr;
 import com.sigpwned.stork.engine.runtime.expr.UnaryOperatorExpr;
 import com.sigpwned.stork.x.StorkException;
 
-public class DefaultStorkCompiler implements StorkCompiler {
-	public DefaultStorkCompiler() {
+public class Translator {
+	public Translator() {
 	}
 	
 	///////////////////////////////////////////////////////////////////////////

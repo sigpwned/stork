@@ -1,6 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast;
 
-import com.sigpwned.stork.engine.compilation.StorkCompiler;
+import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
@@ -24,5 +24,5 @@ public abstract class ExprAST extends AST {
 		return (FloatExprAST) this;
 	}
 	
-	public abstract Expr compile(StorkCompiler compiler);
+	public abstract Expr compile(Translator compiler);
 }
