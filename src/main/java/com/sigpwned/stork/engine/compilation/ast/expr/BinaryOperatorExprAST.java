@@ -41,6 +41,6 @@ public class BinaryOperatorExprAST extends ExprAST {
 	}
 
 	public Expr translate(Translator translator) {
-		return translator.compile(this);
+		return translator.translate(this);
 	}
 }

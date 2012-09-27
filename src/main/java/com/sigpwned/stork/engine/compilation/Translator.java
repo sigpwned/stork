@@ -66,7 +66,7 @@ public class Translator {
 		put(BinaryOperatorExprAST.Operator.MOD, binmodulusRuntimeOperators);
 	}};
 	
-	public Expr compile(BinaryOperatorExprAST expr) {
+	public Expr translate(BinaryOperatorExprAST expr) {
 		Expr result;
 		
 		Type ltype=computeType(expr.getLeft());
@@ -147,11 +147,11 @@ public class Translator {
 	///////////////////////////////////////////////////////////////////////////
 	// OTHER //////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	public Expr compile(IntExprAST expr) {
+	public Expr translate(IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
-	public Expr compile(FloatExprAST expr) {
+	public Expr translate(FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
 	
