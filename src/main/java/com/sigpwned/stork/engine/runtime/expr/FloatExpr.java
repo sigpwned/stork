@@ -1,6 +1,7 @@
 package com.sigpwned.stork.engine.runtime.expr;
 
 import com.sigpwned.stork.engine.runtime.Expr;
+import com.sigpwned.stork.engine.runtime.Scope;
 
 public class FloatExpr extends Expr {
 	private double value;
@@ -13,7 +14,7 @@ public class FloatExpr extends Expr {
 		return value;
 	}
 
-	public Object eval() {
+	public Object eval(Scope scope) {
 		return Double.valueOf(getValue());
 	}
 }

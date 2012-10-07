@@ -57,7 +57,7 @@ public class Tokenizer {
 	
 	public Token peekToken() throws IOException, ParseException {
 		if(next == null) {
-			w();
+			int w=w();
 			
 			int offset=getInput().getOffset();
 			
@@ -135,6 +135,9 @@ public class Tokenizer {
 			}
 			else
 				throw new ParseException("Unrecognized character: "+(char) getInput().peek(), getInput().getOffset());
+			
+			if((w&NEWLINE) != 0)
+				next.setFlag(Token.Flag.NEWLINE);
 		}
 		return next;
 	}
@@ -149,15 +152,30 @@ public class Tokenizer {
 		return result;
 	}
 	
-	public void consumeType(Token.Type type) throws IOException, ParseException {
-		Token token=nextToken();
-		if(token.getType() != type)
-			throw new ParseException("Expected token `"+type+"', found `"+token.getType()+"'", token.getOffset());
+	public Token consumeType(Token.Type type) throws IOException, ParseException {
+		Token result=nextToken();
+		if(result.getType() != type)
+			throw new ParseException("Expected token `"+type+"', found `"+result.getType()+"'", result.getOffset());
+		return result;
 	}
 	
-	protected void w() throws IOException {
-		while(Character.isWhitespace(getInput().peek()))
-			getInput().read();
+	private static int SPACE=  1 << 0;
+	private static int TAB=    1 << 1;
+	private static int NEWLINE=1 << 2;
+	protected int w() throws IOException {
+		int result=0;
+		while(Character.isWhitespace(getInput().peek())) {
+			int ch=getInput().read();
+			if(ch == ' ')
+				result = result | SPACE;
+			else
+			if(ch == '\t')
+				result = result | TAB;
+			else
+			if(ch=='\n' || ch=='\r')
+				result = result | NEWLINE;
+		}
+		return result;
 	}
 	
 	public void close() throws IOException {

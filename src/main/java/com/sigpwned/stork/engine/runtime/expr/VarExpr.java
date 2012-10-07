@@ -3,18 +3,18 @@ package com.sigpwned.stork.engine.runtime.expr;
 import com.sigpwned.stork.engine.runtime.Expr;
 import com.sigpwned.stork.engine.runtime.Scope;
 
-public class IntExpr extends Expr {
-	private long value;
+public class VarExpr extends Expr {
+	private String name;
 	
-	public IntExpr(long value) {
-		this.value = value;
+	public VarExpr(String name) {
+		this.name = name;
 	}
 	
-	public long getValue() {
-		return value;
+	public String getName() {
+		return name;
 	}
 
 	public Object eval(Scope scope) {
-		return Long.valueOf(getValue());
+		return scope.getValue(name);
 	}
 }

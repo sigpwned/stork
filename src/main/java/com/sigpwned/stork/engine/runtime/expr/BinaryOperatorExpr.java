@@ -1,6 +1,7 @@
 package com.sigpwned.stork.engine.runtime.expr;
 
 import com.sigpwned.stork.engine.runtime.Expr;
+import com.sigpwned.stork.engine.runtime.Scope;
 import com.sigpwned.stork.engine.runtime.x.DivideByZeroStorkException;
 
 public class BinaryOperatorExpr extends Expr {
@@ -100,7 +101,7 @@ public class BinaryOperatorExpr extends Expr {
 		return right;
 	}
 
-	public Object eval() {
-		return getOperator().eval(getLeft().eval(), getRight().eval());
+	public Object eval(Scope scope) {
+		return getOperator().eval(getLeft().eval(scope), getRight().eval(scope));
 	}
 }

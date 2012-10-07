@@ -1,6 +1,7 @@
 package com.sigpwned.stork.engine.runtime.expr;
 
 import com.sigpwned.stork.engine.runtime.Expr;
+import com.sigpwned.stork.engine.runtime.Scope;
 
 public class UnaryOperatorExpr extends Expr {
 	public static enum Operator {
@@ -34,7 +35,7 @@ public class UnaryOperatorExpr extends Expr {
 		return inner;
 	}
 
-	public Object eval() {
-		return getOperator().eval(getInner().eval());
+	public Object eval(Scope scope) {
+		return getOperator().eval(getInner().eval(scope));
 	}
 }

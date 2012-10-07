@@ -1,6 +1,13 @@
 package com.sigpwned.stork.engine.compilation.parse;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 public class Token {
+	public static enum Flag {
+		NEWLINE;
+	}
+	
 	public static enum MetaType {
 		VALUE, KEYWORD, OPERATOR, SPECIAL;
 	}
@@ -18,6 +25,8 @@ public class Token {
 		TRUE(MetaType.KEYWORD, "true"),
 		FALSE(MetaType.KEYWORD, "false"),
 		NULL(MetaType.KEYWORD, "null"),
+		VAR(MetaType.KEYWORD, "var"),
+		CAST(MetaType.KEYWORD, "cast"),
 		
 		// Operator Tokens
 		PLUS(MetaType.OPERATOR, "+"),
@@ -27,6 +36,11 @@ public class Token {
 		PERCENT(MetaType.OPERATOR, "%"),
 		LPAREN(MetaType.OPERATOR, "("),
 		RPAREN(MetaType.OPERATOR, ")"),
+		EQ(MetaType.OPERATOR, "="),
+		
+		// Separator Tokens
+		COLON(MetaType.OPERATOR, ":"),
+		SEMICOLON(MetaType.OPERATOR, ";"),
 		
 		// Special Tokens
 		EOF(MetaType.OPERATOR, "$");
@@ -51,11 +65,13 @@ public class Token {
 	private Type type;
 	private int offset;
 	private String text;
+	private Set<Flag> flags;
 	
 	public Token(Type type, int offset, String text) {
 		this.type = type;
 		this.offset = offset;
 		this.text = text;
+		this.flags = EnumSet.noneOf(Flag.class);
 	}
 
 	public Type getType() {
@@ -68,5 +84,17 @@ public class Token {
 
 	public String getText() {
 		return text;
+	}
+	
+	protected Set<Flag> getFlags() {
+		return flags;
+	}
+	
+	public void setFlag(Flag flag) {
+		getFlags().add(flag);
+	}
+	
+	public boolean hasFlag(Flag flag) {
+		return getFlags().contains(flag);
 	}
 }
