@@ -76,8 +76,7 @@ public class Translator {
 	///////////////////////////////////////////////////////////////////////////
 	// EXPRESSION TRANSLATION /////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-
-	// BINARY OPERATORS ///////////////////////////////////////////////////////
+	// BinaryOperatorExprAST //////////////////////////////////////////////////
 	@SuppressWarnings("serial")
 	private static final Map<Type,BinaryOperatorExpr.Operator> binplusRuntimeOperators=new HashMap<Type,BinaryOperatorExpr.Operator>() {{
 		put(Type.FLOAT, BinaryOperatorExpr.Operator.FADD);
@@ -148,7 +147,31 @@ public class Translator {
 		return result;
 	}
 	
-	// UNARY OPERATORS ////////////////////////////////////////////////////////
+	public Type typeOf(BinaryOperatorExprAST expr) {
+		Type ltype=expr.getLeft().typeOf(this);
+		Type rtype=expr.getRight().typeOf(this);
+		return computeBinaryOperatorResultType(ltype, rtype);		
+	}
+	
+	protected static Type computeBinaryOperatorResultType(Type left, Type right) {
+		Type result;
+		if(left.equals(right))
+			result = left;
+		else
+		if(left instanceof NumericType && right instanceof NumericType) {
+			NumericType nleft=(NumericType) left;
+			NumericType nright=(NumericType) right;
+			if(nleft.getPrecision() > nright.getPrecision())
+				result = nleft;
+			else
+				result = right;
+		}
+		else
+			throw new StorkException("Unrecognized type: "+left);
+		return result;
+	}
+	
+	// UnaryOperatorExprAST ///////////////////////////////////////////////////
 	@SuppressWarnings("serial")
 	private static final Map<Type,UnaryOperatorExpr.Operator> unplusRuntimeOperators=new HashMap<Type,UnaryOperatorExpr.Operator>() {{
 		put(Type.FLOAT, null);
@@ -196,15 +219,29 @@ public class Translator {
 		return result;
 	}
 	
-	// OTHER //////////////////////////////////////////////////////////////////
+	public Type typeOf(UnaryOperatorExprAST expr) {
+		return expr.getChild().typeOf(this);
+	}
+	
+	// IntExprAST /////////////////////////////////////////////////////////////
 	public Expr translate(IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
+	public Type typeOf(IntExprAST expr) {
+		return Type.INT;
+	}
+	
+	// FloatExprAST ///////////////////////////////////////////////////////////
 	public Expr translate(FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
 	
+	public Type typeOf(FloatExprAST expr) {
+		return Type.FLOAT;
+	}
+	
+	// VarExprAST /////////////////////////////////////////////////////////////
 	public Expr translate(VarExprAST expr) {
 		Expr result;
 		
@@ -219,33 +256,13 @@ public class Translator {
 		return result;
 	}
 	
-	public Expr translate(CastExprAST expr) {
-		Type castType=expr.getType().eval(this);
-
-		Type valueType=expr.getExpr().typeOf(this);
-		
-		Expr value=expr.getExpr().translate(this);
-		
-		return coerce(value, valueType, castType, true);
-	}
-	
-	///////////////////////////////////////////////////////////////////////////
-	// ASSIGNMENT /////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
-	public Expr assign(BinaryOperatorExprAST left, ExprAST right) {
-		throw new NotAnLValueException(left);
-	}
-	
-	public Expr assign(FloatExprAST left, ExprAST right) {
-		throw new NotAnLValueException(left);
-	}
-	
-	public Expr assign(IntExprAST left, ExprAST right) {
-		throw new NotAnLValueException(left);
-	}
-	
-	public Expr assign(UnaryOperatorExprAST left, ExprAST right) {
-		throw new NotAnLValueException(left);
+	public Type typeOf(VarExprAST expr) {
+		Type result;
+		if(getGlobe().listSlots().contains(expr.getName()))
+			result = getGlobe().getSlot(expr.getName()).getType();
+		else
+			throw new UndefinedVariableException(expr.getName());
+		return result;
 	}
 	
 	public Expr assign(VarExprAST left, ExprAST right) {
@@ -269,62 +286,24 @@ public class Translator {
 		return result;
 	}
 	
-	public Expr assign(CastExprAST left, ExprAST right) {
-		throw new NotAnLValueException(left);
-	}
-	
-	///////////////////////////////////////////////////////////////////////////
-	// TYPE ///////////////////////////////////////////////////////////////////
-	///////////////////////////////////////////////////////////////////////////
-	public Type typeOf(BinaryOperatorExprAST expr) {
-		Type ltype=expr.getLeft().typeOf(this);
-		Type rtype=expr.getRight().typeOf(this);
-		return computeBinaryOperatorResultType(ltype, rtype);		
-	}
-	
-	protected static Type computeBinaryOperatorResultType(Type left, Type right) {
-		Type result;
-		if(left.equals(right))
-			result = left;
-		else
-		if(left instanceof NumericType && right instanceof NumericType) {
-			NumericType nleft=(NumericType) left;
-			NumericType nright=(NumericType) right;
-			if(nleft.getPrecision() > nright.getPrecision())
-				result = nleft;
-			else
-				result = right;
-		}
-		else
-			throw new StorkException("Unrecognized type: "+left);
-		return result;
-	}
-	
-	public Type typeOf(UnaryOperatorExprAST expr) {
-		return expr.getChild().typeOf(this);
-	}
-	
-	public Type typeOf(FloatExprAST expr) {
-		return Type.FLOAT;
-	}
-	
-	public Type typeOf(IntExprAST expr) {
-		return Type.INT;
-	}
-	
-	public Type typeOf(VarExprAST expr) {
-		Type result;
-		if(getGlobe().listSlots().contains(expr.getName()))
-			result = getGlobe().getSlot(expr.getName()).getType();
-		else
-			throw new UndefinedVariableException(expr.getName());
-		return result;
+	// CastExprAST ////////////////////////////////////////////////////////////
+	public Expr translate(CastExprAST expr) {
+		Type castType=expr.getType().eval(this);
+
+		Type valueType=expr.getExpr().typeOf(this);
+		
+		Expr value=expr.getExpr().translate(this);
+		
+		return coerce(value, valueType, castType, true);
 	}
 	
 	public Type typeOf(CastExprAST expr) {
 		return expr.getType().eval(this);
 	}
 	
+	///////////////////////////////////////////////////////////////////////////
+	// TYPE EVALUATION ////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
 	public Type eval(TypeExpr texpr) {
 		if(!getGlobe().listTypes().contains(texpr.getName()))
 			throw new UndefinedTypeException(texpr.getName());
@@ -359,5 +338,13 @@ public class Translator {
 			throw new IncompatibleTypesException(type, target);
 		
 		return result;
+	}
+
+	/**
+	 * Default assignment method for non l-value
+	 * {@link com.sigpwned.stork.engine.compilation.ast.ExprAST}.
+	 */
+	public Expr assign(ExprAST left, ExprAST right) {
+		throw new NotAnLValueException(left);
 	}
 }
