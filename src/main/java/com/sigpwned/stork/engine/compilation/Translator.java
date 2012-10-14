@@ -1,29 +1,43 @@
 package com.sigpwned.stork.engine.compilation;
 
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
+import com.sigpwned.stork.engine.compilation.ast.ParameterAST;
+import com.sigpwned.stork.engine.compilation.ast.StmtAST;
 import com.sigpwned.stork.engine.compilation.ast.TypeExpr;
 import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.CastExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.InvokeExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.VarExprAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.DeclareStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.EvalStmtAST;
+import com.sigpwned.stork.engine.compilation.ast.stmt.FunctionStmtAST;
+import com.sigpwned.stork.engine.compilation.ast.stmt.ReturnStmtAST;
+import com.sigpwned.stork.engine.compilation.type.FunctionType;
 import com.sigpwned.stork.engine.compilation.type.NumericType;
+import com.sigpwned.stork.engine.compilation.x.ArgumentMismatchException;
+import com.sigpwned.stork.engine.compilation.x.DeadCodeStorkException;
 import com.sigpwned.stork.engine.compilation.x.DuplicateVariableException;
+import com.sigpwned.stork.engine.compilation.x.FunctionMayNotReturnException;
 import com.sigpwned.stork.engine.compilation.x.IncompatibleTypesException;
 import com.sigpwned.stork.engine.compilation.x.InternalCompilationStorkException;
 import com.sigpwned.stork.engine.compilation.x.NoSuchOperatorException;
+import com.sigpwned.stork.engine.compilation.x.NotAFunctionException;
 import com.sigpwned.stork.engine.compilation.x.NotAnLValueException;
 import com.sigpwned.stork.engine.compilation.x.PrecisionLossException;
+import com.sigpwned.stork.engine.compilation.x.ReturnNotInFunctionException;
 import com.sigpwned.stork.engine.compilation.x.UndefinedTypeException;
 import com.sigpwned.stork.engine.compilation.x.UndefinedVariableException;
 import com.sigpwned.stork.engine.compilation.x.UninitializedVariableException;
+import com.sigpwned.stork.engine.runtime.Block;
 import com.sigpwned.stork.engine.runtime.Expr;
 import com.sigpwned.stork.engine.runtime.Stmt;
 import com.sigpwned.stork.engine.runtime.expr.BinaryOperatorExpr;
@@ -31,46 +45,118 @@ import com.sigpwned.stork.engine.runtime.expr.FloatExpr;
 import com.sigpwned.stork.engine.runtime.expr.FloatToIntExpr;
 import com.sigpwned.stork.engine.runtime.expr.IntExpr;
 import com.sigpwned.stork.engine.runtime.expr.IntToFloatExpr;
+import com.sigpwned.stork.engine.runtime.expr.InvokeExpr;
 import com.sigpwned.stork.engine.runtime.expr.UnaryOperatorExpr;
 import com.sigpwned.stork.engine.runtime.expr.VarAssignExpr;
 import com.sigpwned.stork.engine.runtime.expr.VarExpr;
 import com.sigpwned.stork.engine.runtime.stmt.DeclareStmt;
 import com.sigpwned.stork.engine.runtime.stmt.EvalStmt;
+import com.sigpwned.stork.engine.runtime.stmt.FunctionStmt;
+import com.sigpwned.stork.engine.runtime.stmt.ReturnStmt;
 import com.sigpwned.stork.x.StorkException;
 
 public class Translator {
 	private Gamma globe;
 	
 	public Translator() {
-		this.globe = new Gamma();
+		this.globe = new Gamma(null, null);
 		this.globe.addType("Int", Type.INT);
 		this.globe.addType("Float", Type.FLOAT);
 	}
 	
-	protected Gamma getGlobe() {
+	public Gamma getGlobe() {
 		return globe;
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
 	// STATEMENT TRANSLATION //////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	public Stmt translate(EvalStmtAST ast) {
-		return new EvalStmt(ast.getExpr().translate(this));
+	public Stmt translate(Gamma gamma, EvalStmtAST ast) {
+		return new EvalStmt(ast.getExpr().translate(gamma, this));
 	}
 	
-	public Stmt translate(DeclareStmtAST ast) {
+	public Stmt translate(Gamma gamma, DeclareStmtAST ast) {
 		String name=ast.getName();
-		if(getGlobe().listSlots().contains(name))
+		if(gamma.listSlots().contains(name))
 			throw new DuplicateVariableException(name);
 		
-		Type type=ast.getType().eval(this);
-		getGlobe().addSlot(name, type);
+		Type type=ast.getType().eval(gamma, this);
+		gamma.addSlot(name, type);
 		
-		Expr init=ast.getInit()!=null ? ast.getInit().translate(this) : null;
+		Expr init=ast.getInit()!=null ? ast.getInit().translate(gamma, this) : null;
 		if(init != null)
-			getGlobe().getSlot(name).setFlag(Gamma.Slot.Flag.INITIALIZED);
+			gamma.getSlot(name).setFlag(Gamma.Slot.Flag.INITIALIZED);
 		
 		return new DeclareStmt(ast.getName(), init);
+	}
+	
+	public Stmt translate(Gamma gamma, FunctionStmtAST ast) {
+		String name=ast.getName();
+
+		FunctionType type;
+		try {
+			type = (FunctionType) gamma.getSlot(name).getType();
+		}
+		catch(ClassCastException e) {
+			throw new InternalCompilationStorkException("Not a FunctionType: "+gamma.getSlot(name).getType());
+		}
+		
+		String[] parameterNames=new String[ast.getParameters().size()];
+		for(int i=0;i<ast.getParameters().size();i++)
+			parameterNames[i] = ast.getParameters().get(i).getName();
+		
+		Gamma inner=new Gamma(gamma, type);
+		for(ParameterAST parameter : ast.getParameters()) {
+			inner.addSlot(parameter.getName(), parameter.getType().eval(gamma, this)).setFlag(Gamma.Slot.Flag.INITIALIZED);
+		}
+		
+		for(StmtAST stmt : ast.getBody().getBody())
+			stmt.defineFunctions(inner, this);
+		
+		List<Stmt> body=new ArrayList<Stmt>();
+		for(int i=0;i<ast.getBody().getBody().size();i++) {
+			StmtAST stmt=ast.getBody().getBody().get(i);
+			if(inner.hasFlag(Gamma.Flag.RETURNED))
+				throw new DeadCodeStorkException(stmt);
+			body.add(stmt.translate(inner, this));
+		}
+		if(!inner.hasFlag(Gamma.Flag.RETURNED))
+			throw new FunctionMayNotReturnException(name);
+		
+		return new FunctionStmt(name, parameterNames, new Block(body.toArray(new Stmt[]{})));
+	}
+	
+	public void defineFunctions(Gamma gamma, FunctionStmtAST ast) {
+		Type resultType=ast.getResultType().eval(gamma, this);
+		
+		Type[] parameterTypes=new Type[ast.getParameters().size()];
+		for(int i=0;i<ast.getParameters().size();i++)
+			parameterTypes[i] = ast.getParameters().get(i).getType().eval(gamma, this);
+		
+		Type type=new FunctionType(resultType, parameterTypes);
+
+		gamma.addSlot(ast.getName(), type).setFlag(Gamma.Slot.Flag.INITIALIZED);
+	}
+	
+	public Stmt translate(Gamma gamma, ReturnStmtAST ast) {
+		if(gamma.getFunctionType() == null)
+			throw new ReturnNotInFunctionException(ast);
+		
+		Expr expr=ast.getExpr().translate(gamma, this);
+		Type type=ast.getExpr().typeOf(gamma, this);
+		expr = coerce(expr, type, gamma.getFunctionType().getResultType(), false);
+		
+		gamma.addFlag(Gamma.Flag.RETURNED);
+		
+		return new ReturnStmt(expr);
+	}
+	
+	// Miscellaneous StmtAST Functions ////////////////////////////////////////
+	public void defineFunctions(Gamma gamma, StmtAST ast) {
+		// Most StmtAST objects don't define a function, so just define a
+		// catch-all defineFunctions() method that will serve most StmtAST
+		// types. Any StmtAST classes that actually DO define a function can
+		// then implement a more specific method.
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -115,14 +201,14 @@ public class Translator {
 		put(BinaryOperatorExprAST.Operator.MOD, binmodulusRuntimeOperators);
 	}};
 	
-	public Expr translate(BinaryOperatorExprAST expr) {
+	public Expr translate(Gamma gamma, BinaryOperatorExprAST expr) {
 		Expr result;
 		
 		if(expr.getOperator() == BinaryOperatorExprAST.Operator.EQ)
-			result = expr.getLeft().assign(this, expr.getRight());
+			result = expr.getLeft().assign(gamma, this, expr.getRight());
 		else {
-			Type ltype=expr.getLeft().typeOf(this);
-			Type rtype=expr.getRight().typeOf(this);
+			Type ltype=expr.getLeft().typeOf(gamma, this);
+			Type rtype=expr.getRight().typeOf(gamma, this);
 			Type resultType=computeBinaryOperatorResultType(ltype, rtype);
 			
 			Map<Type,BinaryOperatorExpr.Operator> runtimeOperators=binaryOperators.get(expr.getOperator());
@@ -134,8 +220,8 @@ public class Translator {
 				if(operator != null) {
 					result = new BinaryOperatorExpr(
 						operator,
-						coerce(expr.getLeft().translate(this), ltype, resultType, false),
-						coerce(expr.getRight().translate(this), rtype, resultType, false));
+						coerce(expr.getLeft().translate(gamma, this), ltype, resultType, false),
+						coerce(expr.getRight().translate(gamma, this), rtype, resultType, false));
 				}
 				else
 					throw new InternalCompilationStorkException("Implicit binary operator not allowed: "+expr.getOperator());
@@ -147,9 +233,9 @@ public class Translator {
 		return result;
 	}
 	
-	public Type typeOf(BinaryOperatorExprAST expr) {
-		Type ltype=expr.getLeft().typeOf(this);
-		Type rtype=expr.getRight().typeOf(this);
+	public Type typeOf(Gamma gamma, BinaryOperatorExprAST expr) {
+		Type ltype=expr.getLeft().typeOf(gamma, this);
+		Type rtype=expr.getRight().typeOf(gamma, this);
 		return computeBinaryOperatorResultType(ltype, rtype);		
 	}
 	
@@ -190,10 +276,10 @@ public class Translator {
 		put(UnaryOperatorExprAST.Operator.NEGATIVE, unminusRuntimeOperators);
 	}};
 	
-	public Expr translate(UnaryOperatorExprAST expr) {
+	public Expr translate(Gamma gamma, UnaryOperatorExprAST expr) {
 		Expr result;
 		
-		Type type=expr.typeOf(this);
+		Type type=expr.typeOf(gamma, this);
 		
 		Map<Type,UnaryOperatorExpr.Operator> runtimeOperators=unaryOperators.get(expr.getOperator());
 		if(runtimeOperators == null)
@@ -204,13 +290,13 @@ public class Translator {
 			if(operator != null) {
 				result = new UnaryOperatorExpr(
 					operator,
-					expr.getChild().translate(this));
+					expr.getChild().translate(gamma, this));
 			}
 			else {
 				// If there is an "empty slot" for our runtime operator, that means that
 				// this is a valid operation, but has no side-effect. (For example, 
 				// unary plus has no effect.) Just return the given expression.
-				result = expr.getChild().translate(this);
+				result = expr.getChild().translate(gamma, this);
 			}
 		}
 		else
@@ -219,36 +305,36 @@ public class Translator {
 		return result;
 	}
 	
-	public Type typeOf(UnaryOperatorExprAST expr) {
-		return expr.getChild().typeOf(this);
+	public Type typeOf(Gamma gamma, UnaryOperatorExprAST expr) {
+		return expr.getChild().typeOf(gamma, this);
 	}
 	
 	// IntExprAST /////////////////////////////////////////////////////////////
-	public Expr translate(IntExprAST expr) {
+	public Expr translate(Gamma gamma, IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
-	public Type typeOf(IntExprAST expr) {
+	public Type typeOf(Gamma gamma, IntExprAST expr) {
 		return Type.INT;
 	}
 	
 	// FloatExprAST ///////////////////////////////////////////////////////////
-	public Expr translate(FloatExprAST expr) {
+	public Expr translate(Gamma gamma, FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
 	
-	public Type typeOf(FloatExprAST expr) {
+	public Type typeOf(Gamma gamma, FloatExprAST expr) {
 		return Type.FLOAT;
 	}
 	
 	// VarExprAST /////////////////////////////////////////////////////////////
-	public Expr translate(VarExprAST expr) {
+	public Expr translate(Gamma gamma, VarExprAST expr) {
 		Expr result;
 		
-		if(!getGlobe().listSlots().contains(expr.getName()))
+		if(!gamma.listSlots().contains(expr.getName()))
 			throw new UndefinedVariableException(expr.getName());
 		else
-		if(!getGlobe().getSlot(expr.getName()).hasFlag(Gamma.Slot.Flag.INITIALIZED))
+		if(!gamma.getSlot(expr.getName()).hasFlag(Gamma.Slot.Flag.INITIALIZED))
 			throw new UninitializedVariableException(expr.getName());
 		else
 			result = new VarExpr(expr.getName());
@@ -256,28 +342,28 @@ public class Translator {
 		return result;
 	}
 	
-	public Type typeOf(VarExprAST expr) {
+	public Type typeOf(Gamma gamma, VarExprAST expr) {
 		Type result;
-		if(getGlobe().listSlots().contains(expr.getName()))
-			result = getGlobe().getSlot(expr.getName()).getType();
+		if(gamma.listSlots().contains(expr.getName()))
+			result = gamma.getSlot(expr.getName()).getType();
 		else
 			throw new UndefinedVariableException(expr.getName());
 		return result;
 	}
 	
-	public Expr assign(VarExprAST left, ExprAST right) {
+	public Expr assign(Gamma gamma, VarExprAST left, ExprAST right) {
 		Expr result;
 		
-		Expr rvalue=right.translate(this);
+		Expr rvalue=right.translate(gamma, this);
 		
 		if(left instanceof VarExprAST) {
 			VarExprAST lvalue=(VarExprAST) left;
-			if(!getGlobe().listSlots().contains(lvalue.getName()))
+			if(!gamma.listSlots().contains(lvalue.getName()))
 				throw new UndefinedVariableException(lvalue.getName());
 			else {
-				Type ltype=getGlobe().getSlot(lvalue.getName()).getType();
-				result = new VarAssignExpr(lvalue.getName(), coerce(rvalue, right.typeOf(this), ltype, false));
-				getGlobe().getSlot(lvalue.getName()).setFlag(Gamma.Slot.Flag.INITIALIZED);
+				Type ltype=gamma.getSlot(lvalue.getName()).getType();
+				result = new VarAssignExpr(lvalue.getName(), coerce(rvalue, right.typeOf(gamma, this), ltype, false));
+				gamma.getSlot(lvalue.getName()).setFlag(Gamma.Slot.Flag.INITIALIZED);
 			}
 		}
 		else
@@ -287,27 +373,62 @@ public class Translator {
 	}
 	
 	// CastExprAST ////////////////////////////////////////////////////////////
-	public Expr translate(CastExprAST expr) {
-		Type castType=expr.getType().eval(this);
+	public Expr translate(Gamma gamma, CastExprAST expr) {
+		Type castType=expr.getType().eval(gamma, this);
 
-		Type valueType=expr.getExpr().typeOf(this);
+		Type valueType=expr.getExpr().typeOf(gamma, this);
 		
-		Expr value=expr.getExpr().translate(this);
+		Expr value=expr.getExpr().translate(gamma, this);
 		
 		return coerce(value, valueType, castType, true);
 	}
 	
-	public Type typeOf(CastExprAST expr) {
-		return expr.getType().eval(this);
+	public Type typeOf(Gamma gamma, CastExprAST expr) {
+		return expr.getType().eval(gamma, this);
+	}
+	
+	// InvokeExprAST //////////////////////////////////////////////////////////
+	public Expr translate(Gamma gamma, InvokeExprAST expr) {
+		Expr function=expr.getFunction().translate(gamma, this);
+
+		FunctionType type=functionType(gamma, expr.getFunction());
+		if(type.numParameterTypes() != expr.getArguments().size())
+			throw new ArgumentMismatchException(type, expr);
+		
+		List<Expr> arguments=new ArrayList<Expr>();
+		for(int i=0;i<type.numParameterTypes();i++) {
+			Type argumentType=expr.getArguments().get(i).typeOf(gamma, this);
+			Expr argument=expr.getArguments().get(i).translate(gamma, this);
+			Type parameterType=type.getParameterType(i);
+			argument = coerce(argument, argumentType, parameterType, false);
+			arguments.add(argument);
+		}
+		
+		return new InvokeExpr(function, arguments.toArray(new Expr[]{}));
+	}
+	
+	public Type typeOf(Gamma gamma, InvokeExprAST expr) {
+		return functionType(gamma, expr.getFunction());
+	}
+	
+	private FunctionType functionType(Gamma gamma, ExprAST expr) {
+		FunctionType result;
+		try {
+			result = (FunctionType) expr.typeOf(gamma, this);
+		}
+		catch(ClassCastException e) {
+			throw new NotAFunctionException(expr);
+		}
+		return result;
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
 	// TYPE EVALUATION ////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	public Type eval(TypeExpr texpr) {
-		if(!getGlobe().listTypes().contains(texpr.getName()))
+	public Type eval(Gamma gamma, TypeExpr texpr) {
+		if(!gamma.listTypes().contains(texpr.getName()))
 			throw new UndefinedTypeException(texpr.getName());
-		return getGlobe().getType(texpr.getName());
+		return gamma.getType(texpr.getName());
 	}
 	
 	///////////////////////////////////////////////////////////////////////////
@@ -344,7 +465,7 @@ public class Translator {
 	 * Default assignment method for non l-value
 	 * {@link com.sigpwned.stork.engine.compilation.ast.ExprAST}.
 	 */
-	public Expr assign(ExprAST left, ExprAST right) {
+	public Expr assign(Gamma gamma, ExprAST left, ExprAST right) {
 		throw new NotAnLValueException(left);
 	}
 }

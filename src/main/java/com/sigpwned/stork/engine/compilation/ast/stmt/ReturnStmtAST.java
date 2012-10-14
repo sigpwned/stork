@@ -4,30 +4,17 @@ import com.sigpwned.stork.engine.compilation.Gamma;
 import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.ast.StmtAST;
-import com.sigpwned.stork.engine.compilation.ast.TypeExpr;
 import com.sigpwned.stork.engine.runtime.Stmt;
 
-public class DeclareStmtAST extends StmtAST {
-	private String name;
-	private TypeExpr type;
-	private ExprAST init;
+public class ReturnStmtAST extends StmtAST {
+	private ExprAST expr;
 	
-	public DeclareStmtAST(String name, TypeExpr type, ExprAST init) {
-		this.name = name;
-		this.type = type;
-		this.init = init;
+	public ReturnStmtAST(ExprAST expr) {
+		this.expr = expr;
 	}
 
-	public String getName() {
-		return name;
-	}
-
-	public TypeExpr getType() {
-		return type;
-	}
-
-	public ExprAST getInit() {
-		return init;
+	public ExprAST getExpr() {
+		return expr;
 	}
 
 	public Stmt translate(Gamma gamma, Translator translate) {

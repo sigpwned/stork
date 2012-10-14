@@ -1,5 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast;
 
+import com.sigpwned.stork.engine.compilation.Gamma;
 import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.ast.stmt.DeclareStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.EvalStmtAST;
@@ -14,5 +15,7 @@ public abstract class StmtAST extends AST {
 		return (DeclareStmtAST) this;
 	}
 	
-	public abstract Stmt translate(Translator translate);
+	public abstract void defineFunctions(Gamma gamma, Translator translate);
+	
+	public abstract Stmt translate(Gamma gamma, Translator translate);
 }

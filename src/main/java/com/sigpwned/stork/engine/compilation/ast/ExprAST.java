@@ -1,5 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast;
 
+import com.sigpwned.stork.engine.compilation.Gamma;
 import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.Type;
 import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
@@ -25,9 +26,9 @@ public abstract class ExprAST extends AST {
 		return (FloatExprAST) this;
 	}
 	
-	public abstract Expr translate(Translator translate);
+	public abstract Expr translate(Gamma gamma, Translator translate);
 	
-	public abstract Expr assign(Translator translate, ExprAST value);
+	public abstract Expr assign(Gamma gamma, Translator translate, ExprAST value);
 	
-	public abstract Type typeOf(Translator translate);	
+	public abstract Type typeOf(Gamma gamma, Translator translate);	
 }

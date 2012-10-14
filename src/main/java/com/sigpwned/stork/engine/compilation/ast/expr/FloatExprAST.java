@@ -1,5 +1,6 @@
 	package com.sigpwned.stork.engine.compilation.ast.expr;
 
+import com.sigpwned.stork.engine.compilation.Gamma;
 import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.Type;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
@@ -16,15 +17,15 @@ public class FloatExprAST extends ExprAST {
 		return value;
 	}
 
-	public Expr translate(Translator translator) {
-		return translator.translate(this);
+	public Expr translate(Gamma gamma, Translator translator) {
+		return translator.translate(gamma, this);
 	}
 
-	public Expr assign(Translator translate, ExprAST value) {
-		return translate.assign(this, value);
+	public Expr assign(Gamma gamma, Translator translate, ExprAST value) {
+		return translate.assign(gamma, this, value);
 	}
 	
-	public Type typeOf(Translator translate) {
-		return translate.typeOf(this);
+	public Type typeOf(Gamma gamma, Translator translate) {
+		return translate.typeOf(gamma, this);
 	}
 }

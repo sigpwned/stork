@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Token {
 	public static enum Flag {
-		NEWLINE;
+		PRENEWLINE, POSTNEWLINE;
 	}
 	
 	public static enum MetaType {
@@ -27,6 +27,10 @@ public class Token {
 		NULL(MetaType.KEYWORD, "null"),
 		VAR(MetaType.KEYWORD, "var"),
 		CAST(MetaType.KEYWORD, "cast"),
+		FUN(MetaType.KEYWORD, "fun"),
+		END(MetaType.KEYWORD, "end"),
+		RETURN(MetaType.KEYWORD, "return"),
+		VOID(MetaType.KEYWORD, "Void"),
 		
 		// Operator Tokens
 		PLUS(MetaType.OPERATOR, "+"),
@@ -37,12 +41,14 @@ public class Token {
 		LPAREN(MetaType.OPERATOR, "("),
 		RPAREN(MetaType.OPERATOR, ")"),
 		EQ(MetaType.OPERATOR, "="),
+		COMMA(MetaType.OPERATOR, ","),
 		
 		// Separator Tokens
 		COLON(MetaType.OPERATOR, ":"),
 		SEMICOLON(MetaType.OPERATOR, ";"),
 		
 		// Special Tokens
+		BOF(MetaType.OPERATOR, "^"),
 		EOF(MetaType.OPERATOR, "$");
 		
 		private MetaType type;

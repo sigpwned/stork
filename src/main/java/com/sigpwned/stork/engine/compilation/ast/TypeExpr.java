@@ -1,5 +1,6 @@
 package com.sigpwned.stork.engine.compilation.ast;
 
+import com.sigpwned.stork.engine.compilation.Gamma;
 import com.sigpwned.stork.engine.compilation.Translator;
 import com.sigpwned.stork.engine.compilation.Type;
 
@@ -15,7 +16,7 @@ public class TypeExpr {
 		return name;
 	}
 	
-	public Type eval(Translator translate) {
-		return translate.eval(this);
+	public Type eval(Gamma gamma, Translator translate) {
+		return translate.eval(gamma, this);
 	}
 }

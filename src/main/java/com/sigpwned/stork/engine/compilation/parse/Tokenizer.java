@@ -44,10 +44,13 @@ public class Tokenizer {
 	}
 	
 	private ParseReader input;
+	private Token last;
 	private Token next;
+	private Integer precedes;
 	
 	public Tokenizer(Reader input) {
 		this.input = new ParseReader(input);
+		this.last  = new Token(Token.Type.BOF, 0, Token.Type.BOF.getText());
 		this.next  = null;
 	}
 	
@@ -57,7 +60,9 @@ public class Tokenizer {
 	
 	public Token peekToken() throws IOException, ParseException {
 		if(next == null) {
-			int w=w();
+			if(precedes == null)
+				precedes = 0;
+			precedes = precedes | w();
 			
 			int offset=getInput().getOffset();
 			
@@ -136,8 +141,12 @@ public class Tokenizer {
 			else
 				throw new ParseException("Unrecognized character: "+(char) getInput().peek(), getInput().getOffset());
 			
-			if((w&NEWLINE) != 0)
-				next.setFlag(Token.Flag.NEWLINE);
+			if((precedes&NEWLINE) != 0)
+				next.setFlag(Token.Flag.PRENEWLINE);
+			
+			precedes = sw();
+			if((precedes&NEWLINE) != 0)
+				next.setFlag(Token.Flag.POSTNEWLINE);
 		}
 		return next;
 	}
@@ -146,8 +155,17 @@ public class Tokenizer {
 		return peekToken().getType();
 	}
 	
+	public Token lastToken() {
+		return last;
+	}
+	
+	public Token.Type lastType() {
+		return lastToken().getType();
+	}
+	
 	public Token nextToken() throws IOException, ParseException {
 		Token result=peekToken();
+		last = result;
 		next = null;
 		return result;
 	}
@@ -162,6 +180,24 @@ public class Tokenizer {
 	private static int SPACE=  1 << 0;
 	private static int TAB=    1 << 1;
 	private static int NEWLINE=1 << 2;
+	protected int sw() throws IOException {
+		int result=0;
+		while(Character.isWhitespace(getInput().peek())) {
+			int ch=getInput().read();
+			if(ch == ' ')
+				result = result | SPACE;
+			else
+			if(ch == '\t')
+				result = result | TAB;
+			else
+			if(ch == '\n') {
+				result = result | NEWLINE;
+				break;
+			}
+		}
+		return result;
+	}
+
 	protected int w() throws IOException {
 		int result=0;
 		while(Character.isWhitespace(getInput().peek())) {
