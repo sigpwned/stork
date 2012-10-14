@@ -33,12 +33,12 @@ public class InvokeExpr extends Expr {
 			throw new InternalRuntimeStorkException("Expression does not evaluate to a Function: "+this.function);
 		}
 
-		if(getArguments().length != function.getParameters().length)
-			throw new InternalRuntimeStorkException("Argument/parameter count mismatch; params="+function.getParameters().length+", args="+getArguments().length);
+		if(getArguments().length != function.getParameterNames().length)
+			throw new InternalRuntimeStorkException("Argument/parameter count mismatch; params="+function.getParameterNames().length+", args="+getArguments().length);
 		
 		Scope inner=new Scope(function.getOuter());
 		for(int i=0;i<getArguments().length;i++)
-			inner.defineVar(function.getParameters()[i], getArguments()[i].eval(outer));
+			inner.defineVar(function.getParameterNames()[i], getArguments()[i].eval(outer));
 		
 		function.getBody().exec(inner);
 		

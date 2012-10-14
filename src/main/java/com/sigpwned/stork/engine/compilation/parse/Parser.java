@@ -15,12 +15,15 @@ import com.sigpwned.stork.engine.compilation.ast.expr.CastExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.InvokeExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.LambdaExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.VarExprAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.DeclareStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.EvalStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.FunctionStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.ReturnStmtAST;
+import com.sigpwned.stork.engine.compilation.ast.type.FunctionTypeExpr;
+import com.sigpwned.stork.engine.compilation.ast.type.SymbolTypeExpr;
 
 public class Parser {
 	private Tokenizer tokens;
@@ -139,7 +142,32 @@ public class Parser {
 	}
 	
 	protected TypeExpr type() throws IOException, ParseException {
-		return new TypeExpr(getTokens().consumeType(Token.Type.SYMBOL).getText());
+		TypeExpr result;
+		
+		if(getTokens().peekType() == Token.Type.LPAREN) {
+			getTokens().consumeType(Token.Type.LPAREN);
+			
+			List<TypeExpr> parameterTypes=new ArrayList<TypeExpr>();
+			if(getTokens().peekType() != Token.Type.RPAREN) {
+				parameterTypes.add(type());
+				while(getTokens().peekType() == Token.Type.COMMA) {
+					getTokens().consumeType(Token.Type.COMMA);
+					parameterTypes.add(type());
+				}
+			}
+			
+			getTokens().consumeType(Token.Type.RPAREN);
+			
+			getTokens().consumeType(Token.Type.ARROW);
+			
+			TypeExpr resultType=type();
+			
+			result = new FunctionTypeExpr(resultType, parameterTypes);
+		}
+		else
+			result = new SymbolTypeExpr(getTokens().consumeType(Token.Type.SYMBOL).getText());
+		
+		return result;
 	}
 	
 	protected ExprAST expr() throws IOException, ParseException {
@@ -244,6 +272,15 @@ public class Parser {
 		if(getTokens().peekType() == Token.Type.SYMBOL)
 			result = new VarExprAST(getTokens().nextToken().getText());
 		else
+		if(getTokens().peekType() == Token.Type.LAMBDA) {
+			getTokens().consumeType(Token.Type.LAMBDA);
+			getTokens().consumeType(Token.Type.LPAREN);
+			List<ParameterAST> parameters=params();
+			getTokens().consumeType(Token.Type.RPAREN);
+			getTokens().consumeType(Token.Type.ARROW);
+			ExprAST body=expr();
+			result = new LambdaExprAST(parameters, body);
+		} else
 		if(getTokens().peekType() == Token.Type.LPAREN) {
 			getTokens().consumeType(Token.Type.LPAREN);
 			if(getTokens().peekType() == Token.Type.CAST) {

@@ -7,12 +7,12 @@ import com.sigpwned.stork.engine.runtime.value.Function;
 
 public class FunctionStmt extends Stmt {
 	private String name;
-	private String[] params;
+	private String[] parameterNames;
 	private Block body;
 	
-	public FunctionStmt(String name, String[] params, Block body) {
+	public FunctionStmt(String name, String[] parameterNames, Block body) {
 		this.name = name;
-		this.params = params;
+		this.parameterNames = parameterNames;
 		this.body = body;
 	}
 
@@ -20,8 +20,8 @@ public class FunctionStmt extends Stmt {
 		return name;
 	}
 
-	public String[] getParams() {
-		return params;
+	public String[] getParameterNames() {
+		return parameterNames;
 	}
 
 	public Block getBody() {
@@ -29,7 +29,7 @@ public class FunctionStmt extends Stmt {
 	}
 
 	public Object exec(Scope scope) {
-		Function function=new Function(scope, getParams(), getBody());
+		Function function=new Function(scope, getParameterNames(), getBody());
 		scope.defineVar(getName(), function);
 		return function;
 	}

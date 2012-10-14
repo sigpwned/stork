@@ -42,4 +42,30 @@ public class FunctionType extends Type {
 		result.append(getResultType().toString());
 		return result.toString();
 	}
+	
+	public boolean equals(Object other) {
+		boolean result;
+		
+		if(this == other)
+			result = true;
+		else
+		if(other == null)
+			result = false;
+		else
+		if(other instanceof FunctionType) {
+			FunctionType otherp=(FunctionType) other;
+			if(numParameterTypes() == otherp.numParameterTypes()) {
+				result = true;
+				for(int i=0;i<numParameterTypes();i++)
+					result = result && getParameterType(i).equals(otherp.getParameterType(i));
+				result = result && getResultType().equals(otherp.getResultType());
+			}
+			else
+				result = false;
+		}
+		else
+			result = false;
+		
+		return result;
+	}
 }

@@ -9,20 +9,24 @@ import java.util.Map;
 import com.sigpwned.stork.engine.compilation.ast.ExprAST;
 import com.sigpwned.stork.engine.compilation.ast.ParameterAST;
 import com.sigpwned.stork.engine.compilation.ast.StmtAST;
-import com.sigpwned.stork.engine.compilation.ast.TypeExpr;
 import com.sigpwned.stork.engine.compilation.ast.expr.BinaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.CastExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.FloatExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.IntExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.InvokeExprAST;
+import com.sigpwned.stork.engine.compilation.ast.expr.LambdaExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.UnaryOperatorExprAST;
 import com.sigpwned.stork.engine.compilation.ast.expr.VarExprAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.DeclareStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.EvalStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.FunctionStmtAST;
 import com.sigpwned.stork.engine.compilation.ast.stmt.ReturnStmtAST;
+import com.sigpwned.stork.engine.compilation.ast.type.FunctionTypeExpr;
+import com.sigpwned.stork.engine.compilation.ast.type.SymbolTypeExpr;
 import com.sigpwned.stork.engine.compilation.type.FunctionType;
 import com.sigpwned.stork.engine.compilation.type.NumericType;
+import com.sigpwned.stork.engine.compilation.type.numeric.FloatType;
+import com.sigpwned.stork.engine.compilation.type.numeric.IntType;
 import com.sigpwned.stork.engine.compilation.x.ArgumentMismatchException;
 import com.sigpwned.stork.engine.compilation.x.DeadCodeStorkException;
 import com.sigpwned.stork.engine.compilation.x.DuplicateVariableException;
@@ -46,6 +50,7 @@ import com.sigpwned.stork.engine.runtime.expr.FloatToIntExpr;
 import com.sigpwned.stork.engine.runtime.expr.IntExpr;
 import com.sigpwned.stork.engine.runtime.expr.IntToFloatExpr;
 import com.sigpwned.stork.engine.runtime.expr.InvokeExpr;
+import com.sigpwned.stork.engine.runtime.expr.LambdaExpr;
 import com.sigpwned.stork.engine.runtime.expr.UnaryOperatorExpr;
 import com.sigpwned.stork.engine.runtime.expr.VarAssignExpr;
 import com.sigpwned.stork.engine.runtime.expr.VarExpr;
@@ -106,9 +111,8 @@ public class Translator {
 			parameterNames[i] = ast.getParameters().get(i).getName();
 		
 		Gamma inner=new Gamma(gamma, type);
-		for(ParameterAST parameter : ast.getParameters()) {
+		for(ParameterAST parameter : ast.getParameters())
 			inner.addSlot(parameter.getName(), parameter.getType().eval(gamma, this)).setFlag(Gamma.Slot.Flag.INITIALIZED);
-		}
 		
 		for(StmtAST stmt : ast.getBody().getBody())
 			stmt.defineFunctions(inner, this);
@@ -310,20 +314,20 @@ public class Translator {
 	}
 	
 	// IntExprAST /////////////////////////////////////////////////////////////
-	public Expr translate(Gamma gamma, IntExprAST expr) {
+	public IntExpr translate(Gamma gamma, IntExprAST expr) {
 		return new IntExpr(expr.getValue());
 	}
 	
-	public Type typeOf(Gamma gamma, IntExprAST expr) {
+	public IntType typeOf(Gamma gamma, IntExprAST expr) {
 		return Type.INT;
 	}
 	
 	// FloatExprAST ///////////////////////////////////////////////////////////
-	public Expr translate(Gamma gamma, FloatExprAST expr) {
+	public FloatExpr translate(Gamma gamma, FloatExprAST expr) {
 		return new FloatExpr(expr.getValue());
 	}
 	
-	public Type typeOf(Gamma gamma, FloatExprAST expr) {
+	public FloatType typeOf(Gamma gamma, FloatExprAST expr) {
 		return Type.FLOAT;
 	}
 	
@@ -387,6 +391,41 @@ public class Translator {
 		return expr.getType().eval(gamma, this);
 	}
 	
+	// LambdaExprAST //////////////////////////////////////////////////////////
+	public Expr translate(Gamma gamma, LambdaExprAST expr) {
+		typeOf(gamma, expr);
+
+		Gamma inner=new Gamma(gamma, null);
+		String[] parameterNames=new String[expr.getParameters().size()];
+		for(int i=0;i<expr.getParameters().size();i++) {
+			ParameterAST parameter=expr.getParameters().get(i);
+			parameterNames[i] = parameter.getName();
+			inner.addSlot(parameter.getName(), parameter.getType().eval(gamma, this)).setFlag(Gamma.Slot.Flag.INITIALIZED);
+		}
+		
+		Block body=new Block(new Stmt[] {
+			new ReturnStmt(expr.getBody().translate(inner, this))
+		});
+		
+		return new LambdaExpr(parameterNames, body);
+	}
+	
+	public FunctionType typeOf(Gamma gamma, LambdaExprAST expr) {
+		Gamma inner=new Gamma(gamma, null);
+		
+		Type[] parameterTypes=new Type[expr.getParameters().size()];
+		for(int i=0;i<expr.getParameters().size();i++) {
+			ParameterAST parameter=expr.getParameters().get(i);
+			Type parameterType=expr.getParameters().get(i).getType().eval(gamma, this);
+			parameterTypes[i] = parameterType;
+			inner.addSlot(parameter.getName(), parameterType).setFlag(Gamma.Slot.Flag.INITIALIZED);
+		}
+		
+		Type resultType=expr.getBody().typeOf(inner, this);
+		
+		return new FunctionType(resultType, parameterTypes);
+	}
+	
 	// InvokeExprAST //////////////////////////////////////////////////////////
 	public Expr translate(Gamma gamma, InvokeExprAST expr) {
 		Expr function=expr.getFunction().translate(gamma, this);
@@ -425,10 +464,21 @@ public class Translator {
 	///////////////////////////////////////////////////////////////////////////
 	// TYPE EVALUATION ////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
-	public Type eval(Gamma gamma, TypeExpr texpr) {
-		if(!gamma.listTypes().contains(texpr.getName()))
+	public Type eval(Gamma gamma, SymbolTypeExpr texpr) {
+		Type result;
+		if(gamma.hasType(texpr.getName()))
+			result = gamma.getType(texpr.getName());
+		else
 			throw new UndefinedTypeException(texpr.getName());
-		return gamma.getType(texpr.getName());
+		return result;
+	}
+	
+	public Type eval(Gamma gamma, FunctionTypeExpr texpr) {
+		Type[] parameterTypes=new Type[texpr.getParameterTypes().size()];
+		for(int i=0;i<texpr.getParameterTypes().size();i++)
+			parameterTypes[i] = texpr.getParameterTypes().get(i).eval(gamma, this);
+		Type resultType=texpr.getResultType().eval(gamma, this);
+		return new FunctionType(resultType, parameterTypes);
 	}
 	
 	///////////////////////////////////////////////////////////////////////////

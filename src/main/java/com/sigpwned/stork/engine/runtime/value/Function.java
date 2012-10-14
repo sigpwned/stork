@@ -5,12 +5,12 @@ import com.sigpwned.stork.engine.runtime.Scope;
 
 public class Function {
 	private Scope outer;
-	private String[] parameters;
+	private String[] parameterNames;
 	private Block body;
 	
-	public Function(Scope outer, String[] parameters, Block body) {
+	public Function(Scope outer, String[] parameterNames, Block body) {
 		this.outer = outer;
-		this.parameters = parameters;
+		this.parameterNames = parameterNames;
 		this.body = body;
 	}
 	
@@ -18,8 +18,8 @@ public class Function {
 		return outer;
 	}
 
-	public String[] getParameters() {
-		return parameters;
+	public String[] getParameterNames() {
+		return parameterNames;
 	}
 
 	public Block getBody() {

@@ -111,6 +111,18 @@ public class Gamma {
 		return getTypes().keySet();
 	}
 	
+	public boolean hasType(String name) {
+		boolean result;
+		try {
+			getType(name);
+			result = true;
+		}
+		catch(InternalCompilationStorkException e) {
+			result = false;
+		}
+		return result;
+	}
+	
 	public Type getType(String name) {
 		Type result;
 		if(listTypes().contains(name))

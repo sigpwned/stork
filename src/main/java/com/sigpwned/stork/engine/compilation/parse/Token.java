@@ -30,6 +30,7 @@ public class Token {
 		FUN(MetaType.KEYWORD, "fun"),
 		END(MetaType.KEYWORD, "end"),
 		RETURN(MetaType.KEYWORD, "return"),
+		LAMBDA(MetaType.KEYWORD, "lambda"),
 		VOID(MetaType.KEYWORD, "Void"),
 		
 		// Operator Tokens
@@ -42,6 +43,7 @@ public class Token {
 		RPAREN(MetaType.OPERATOR, ")"),
 		EQ(MetaType.OPERATOR, "="),
 		COMMA(MetaType.OPERATOR, ","),
+		ARROW(MetaType.OPERATOR, "->"),
 		
 		// Separator Tokens
 		COLON(MetaType.OPERATOR, ":"),
