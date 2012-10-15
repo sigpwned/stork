@@ -106,13 +106,15 @@ public class Translator {
 			throw new InternalCompilationStorkException("Not a FunctionType: "+gamma.getSlot(name).getType());
 		}
 		
-		String[] parameterNames=new String[ast.getParameters().size()];
-		for(int i=0;i<ast.getParameters().size();i++)
-			parameterNames[i] = ast.getParameters().get(i).getName();
+		String[] parameterNames=new String[ast.numParameters()];
+		for(int i=0;i<ast.numParameters();i++)
+			parameterNames[i] = ast.getParameter(i).getName();
 		
 		Gamma inner=new Gamma(gamma, type);
-		for(ParameterAST parameter : ast.getParameters())
+		for(int i=0;i<ast.numParameters();i++) {
+			ParameterAST parameter=ast.getParameter(i);
 			inner.addSlot(parameter.getName(), parameter.getType().eval(gamma, this)).setFlag(Gamma.Slot.Flag.INITIALIZED);
+		}
 		
 		for(StmtAST stmt : ast.getBody().getBody())
 			stmt.defineFunctions(inner, this);
@@ -133,9 +135,11 @@ public class Translator {
 	public void defineFunctions(Gamma gamma, FunctionStmtAST ast) {
 		Type resultType=ast.getResultType().eval(gamma, this);
 		
-		Type[] parameterTypes=new Type[ast.getParameters().size()];
-		for(int i=0;i<ast.getParameters().size();i++)
-			parameterTypes[i] = ast.getParameters().get(i).getType().eval(gamma, this);
+		Type[] parameterTypes=new Type[ast.numParameters()];
+		for(int i=0;i<ast.numParameters();i++) {
+			ParameterAST parameter=ast.getParameter(i);
+			parameterTypes[i] = parameter.getType().eval(gamma, this);
+		}
 		
 		Type type=new FunctionType(resultType, parameterTypes);
 
@@ -396,9 +400,9 @@ public class Translator {
 		typeOf(gamma, expr);
 
 		Gamma inner=new Gamma(gamma, null);
-		String[] parameterNames=new String[expr.getParameters().size()];
-		for(int i=0;i<expr.getParameters().size();i++) {
-			ParameterAST parameter=expr.getParameters().get(i);
+		String[] parameterNames=new String[expr.numParameters()];
+		for(int i=0;i<expr.numParameters();i++) {
+			ParameterAST parameter=expr.getParameter(i);
 			parameterNames[i] = parameter.getName();
 			inner.addSlot(parameter.getName(), parameter.getType().eval(gamma, this)).setFlag(Gamma.Slot.Flag.INITIALIZED);
 		}
@@ -413,10 +417,10 @@ public class Translator {
 	public FunctionType typeOf(Gamma gamma, LambdaExprAST expr) {
 		Gamma inner=new Gamma(gamma, null);
 		
-		Type[] parameterTypes=new Type[expr.getParameters().size()];
-		for(int i=0;i<expr.getParameters().size();i++) {
-			ParameterAST parameter=expr.getParameters().get(i);
-			Type parameterType=expr.getParameters().get(i).getType().eval(gamma, this);
+		Type[] parameterTypes=new Type[expr.numParameters()];
+		for(int i=0;i<expr.numParameters();i++) {
+			ParameterAST parameter=expr.getParameter(i);
+			Type parameterType=expr.getParameter(i).getType().eval(gamma, this);
 			parameterTypes[i] = parameterType;
 			inner.addSlot(parameter.getName(), parameterType).setFlag(Gamma.Slot.Flag.INITIALIZED);
 		}
@@ -431,13 +435,13 @@ public class Translator {
 		Expr function=expr.getFunction().translate(gamma, this);
 
 		FunctionType type=functionType(gamma, expr.getFunction());
-		if(type.numParameterTypes() != expr.getArguments().size())
+		if(type.numParameterTypes() != expr.numArguments())
 			throw new ArgumentMismatchException(type, expr);
 		
 		List<Expr> arguments=new ArrayList<Expr>();
 		for(int i=0;i<type.numParameterTypes();i++) {
-			Type argumentType=expr.getArguments().get(i).typeOf(gamma, this);
-			Expr argument=expr.getArguments().get(i).translate(gamma, this);
+			Type argumentType=expr.getArgument(i).typeOf(gamma, this);
+			Expr argument=expr.getArgument(i).translate(gamma, this);
 			Type parameterType=type.getParameterType(i);
 			argument = coerce(argument, argumentType, parameterType, false);
 			arguments.add(argument);

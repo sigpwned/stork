@@ -18,8 +18,16 @@ public class LambdaExprAST extends ExprAST {
 		this.body = body;
 	}
 	
-	public List<ParameterAST> getParameters() {
+	protected List<ParameterAST> getParameters() {
 		return parameters;
+	}
+	
+	public int numParameters() {
+		return getParameters().size();
+	}
+	
+	public ParameterAST getParameter(int index) {
+		return getParameters().get(index);
 	}
 
 	public ExprAST getBody() {

@@ -6,6 +6,6 @@ import com.sigpwned.stork.engine.compilation.type.FunctionType;
 public class ArgumentMismatchException extends CompilationStorkException {
 	private static final long serialVersionUID = 6855078120880977498L;
 	public ArgumentMismatchException(FunctionType type, InvokeExprAST expr) {
-		super("Function expects "+type.numParameterTypes()+" arguments, not "+expr.getArguments().size());
+		super("Function expects "+type.numParameterTypes()+" arguments, not "+expr.numArguments());
 	}
 }

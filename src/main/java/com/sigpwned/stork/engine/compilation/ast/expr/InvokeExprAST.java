@@ -22,8 +22,16 @@ public class InvokeExprAST extends ExprAST {
 		return function;
 	}
 	
-	public List<ExprAST> getArguments() {
+	protected List<ExprAST> getArguments() {
 		return arguments;
+	}
+	
+	public int numArguments() {
+		return getArguments().size();
+	}
+	
+	public ExprAST getArgument(int index) {
+		return getArguments().get(index);
 	}
 
 	public void addArgument(ExprAST argument) {
